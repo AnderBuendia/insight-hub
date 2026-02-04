@@ -36,6 +36,9 @@
 ### `src/app/`
 **Purpose:** Route-level composition and application wiring (Next.js routing).
 
+- The layering described below follows the architectural decisions documented in
+ADR-0001 — Frontend Architecture.
+
 ---
 
 ## 2.1 Dependency Rules
@@ -195,3 +198,6 @@ These contracts are intentionally simple to allow replacement of mock data later
 
 - **Feature modules own UI orchestration; domain stays pure**  
   *Consequence:* Feature modules may grow large; boundaries are enforced via dependency rules.
+
+- **Feature-based frontend architecture with a domain-centered core.**
+  - *Rationale*: See [ADR-0001 — Frontend Architecture](./decisions/0001-frontend-architecture.md).
