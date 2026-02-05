@@ -1,13 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDatasets } from "@/features/datasets/state/useDatasets";
 import { PageShell } from "@/shared";
 import { DatasetList } from "../ui/DatasetList";
-import { useDatasets } from "@/features/datasets/state/useDatasets";
 import { ScenarioControls } from "@/features/datasets/ui/ScenarioControls";
 
-ScenarioControls
 export function DatasetsPage() {
   const { state, actions } = useDatasets();
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedFromUrl = searchParams.get("selected") ?? undefined;
+
+  useEffect(() => {
+    if (state.status !== "success") return;
+    if (!selectedFromUrl) return;
+    if (state.selectedId === selectedFromUrl) return;
+
+    // Only select if the dataset exists
+    const exists = state.datasets.some((d) => d.id === selectedFromUrl);
+    if (exists) actions.selectDataset(selectedFromUrl);
+  }, [state, selectedFromUrl, actions]);
 
   return (
     <PageShell title="Datasets">
@@ -41,7 +56,10 @@ export function DatasetsPage() {
           <DatasetList
             datasets={state.datasets}
             selectedId={state.selectedId}
-            onSelect={actions.selectDataset}
+            onSelect={(id) => {
+              actions.selectDataset(id);
+              router.replace(`/datasets?selected=${encodeURIComponent(id)}`);
+            }}
           />
           {state.selectedId ? (
             <p>Selected: {state.selectedId}</p>
