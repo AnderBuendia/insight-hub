@@ -3,3 +3,5 @@ export type InfraDataset = {
   name: string;
   description?: string;
 };
+
+export type DatasetsScenario = "success" | "empty" | "error";
