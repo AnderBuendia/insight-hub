@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDatasets } from "@/features/datasets/state/useDatasets";
 import { PageShell } from "@/shared";
 import { DatasetList } from "../ui/DatasetList";
 import { ScenarioControls } from "@/features/datasets/ui/ScenarioControls";
 
-export function DatasetsPage() {
+function DatasetsContent() {
   const { state, actions } = useDatasets();
 
   const router = useRouter();
@@ -69,5 +69,13 @@ export function DatasetsPage() {
         </>
       ) : null}
     </PageShell>
+  );
+}
+
+export function DatasetsPage() {
+  return (
+    <Suspense fallback={<PageShell title="Datasets"><p>Loading…</p></PageShell>}>
+      <DatasetsContent />
+    </Suspense>
   );
 }

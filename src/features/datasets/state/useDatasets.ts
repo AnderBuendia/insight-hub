@@ -31,7 +31,15 @@ export function useDatasets() {
   }, []);
 
   useEffect(() => {
-    load().catch((err) => console.error("Failed to load datasets:", err)); // initial load
+    async function loadInitial() {
+      try {
+        await load();
+      } catch (err) {
+        console.error("Failed to load datasets:", err);
+      }
+    }
+    
+    loadInitial();
   }, [load]);
 
   const selectDataset = useCallback((id: DatasetId) => {
