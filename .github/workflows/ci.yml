@@ -43,22 +43,55 @@ jobs:
         if: github.event_name == 'pull_request'
         id: coverage
         run: |
-          npx vitest run --coverage --reporter=json --outputFile=coverage-summary.json || true
-          
-          # Read coverage summary
-          COVERAGE=$(cat coverage-summary.json | jq -r '.coverageMap | to_entries | .[0].value | @json')
-          
-          # Parse coverage from console output (fallback)
+          # Run coverage and capture output
           npm run test:coverage > coverage.txt 2>&1 || true
           
+          # Extract coverage data
+          THRESHOLD=50
+          
+          # Parse overall coverage
+          COVERAGE_LINE=$(grep "All files" coverage.txt | head -1)
+          STATEMENTS=$(echo "$COVERAGE_LINE" | awk '{print $4}')
+          BRANCHES=$(echo "$COVERAGE_LINE" | awk '{print $6}')
+          FUNCTIONS=$(echo "$COVERAGE_LINE" | awk '{print $8}')
+          LINES=$(echo "$COVERAGE_LINE" | awk '{print $10}')
+          
+          # Function to get status icon
+          get_icon() {
+            value=$(echo "$1" | tr -d '%')
+            if (( $(echo "$value >= $THRESHOLD" | bc -l) )); then
+              echo "🟢"
+            else
+              echo "🔴"
+            fi
+          }
+          
           # Create markdown report
-          cat > coverage-report.md << 'EOF'
+          cat > coverage-report.md << EOF
           ## 📊 Coverage Report
+          
+          ### Overall Coverage
+          
+          | Metric | Coverage | Status |
+          |--------|----------|--------|
+          | Statements | ${STATEMENTS}% | $(get_icon "$STATEMENTS") |
+          | Branches | ${BRANCHES}% | $(get_icon "$BRANCHES") |
+          | Functions | ${FUNCTIONS}% | $(get_icon "$FUNCTIONS") |
+          | Lines | ${LINES}% | $(get_icon "$LINES") |
+          
+          **Threshold:** ${THRESHOLD}% 🟢 Pass | 🔴 Fail
+          
+          ### Coverage by Directory
           
           EOF
           
-          # Extract coverage table from output
-          grep -A 20 "Coverage report" coverage.txt | tail -n +2 >> coverage-report.md || echo "Coverage data not available" >> coverage-report.md
+          # Extract directory-level coverage
+          grep -E "src/.*\s+\|" coverage.txt | grep -v "All files" | while read -r line; do
+            DIR=$(echo "$line" | awk '{print $1}')
+            STMTS=$(echo "$line" | awk '{print $3}')
+            ICON=$(get_icon "$STMTS")
+            echo "- **$DIR**: ${STMTS}% $ICON" >> coverage-report.md
+          done
           
           echo "report<<EOF" >> $GITHUB_OUTPUT
           cat coverage-report.md >> $GITHUB_OUTPUT
