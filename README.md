@@ -78,6 +78,8 @@ Comprehensive documentation is available in the `docs/` directory:
 
 **[CONVENTIONS.md](docs/CONVENTIONS.md)** — Code conventions, patterns, and best practices
 
+**[TESTING.md](docs/TESTING.md)** — Testing guidelines, standards, and patterns for all component types
+
 **[DEFINITION_OF_DONE.md](docs/DEFINITION_OF_DONE.md)** — Quality checklist for feature completion
 
 ### Domain
@@ -98,11 +100,18 @@ src/
 ├── domain/           # Business entities and domain rules
 ├── features/         # Feature modules (datasets, analysis, ai)
 │   ├── datasets/     # Dataset exploration feature
+│   │   ├── page/     # Page components + tests
+│   │   ├── ui/       # UI components + tests
+│   │   └── state/    # Custom hooks + tests
 │   ├── analysis/     # Analytics and metrics feature
+│   │   ├── page/     # Page components + tests
+│   │   └── ui/       # UI components + tests
 │   └── ai/           # AI-assisted insights feature
 ├── infra/            # External integrations and data repositories
 └── shared/           # Reusable UI components and utilities
 ```
+
+**Testing Structure:** Tests are co-located with their source files (e.g., `Component.tsx` → `Component.test.tsx`) for easier maintenance and navigation.
 
 ---
 
