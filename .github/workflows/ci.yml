@@ -35,3 +35,65 @@ jobs:
       
       - name: Test with Coverage
         run: npm run test:coverage
+
+      - name: Generate Coverage Report
+        if: github.event_name == 'pull_request'
+        id: coverage
+        run: |
+          npx vitest run --coverage --reporter=json --outputFile=coverage-summary.json || true
+          
+          # Read coverage summary
+          COVERAGE=$(cat coverage-summary.json | jq -r '.coverageMap | to_entries | .[0].value | @json')
+          
+          # Parse coverage from console output (fallback)
+          npm run test:coverage > coverage.txt 2>&1 || true
+          
+          # Create markdown report
+          cat > coverage-report.md << 'EOF'
+          ## 📊 Coverage Report
+          
+          EOF
+          
+          # Extract coverage table from output
+          grep -A 20 "Coverage report" coverage.txt | tail -n +2 >> coverage-report.md || echo "Coverage data not available" >> coverage-report.md
+          
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          cat coverage-report.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment Coverage Report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const report = `${{ steps.coverage.outputs.report }}`;
+            
+            // Find previous coverage comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📊 Coverage Report')
+            );
+            
+            const commentBody = `${report}\n\n---\n*Updated: ${new Date().toISOString()}*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
