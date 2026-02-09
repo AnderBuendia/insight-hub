@@ -1,203 +1,163 @@
-# InsightHub — Architecture Overview (v1)
+# InsightHub — Architecture (v1)
 
-## 1) Architectural Goals (v1)
+This document describes the v1 architecture for InsightHub.  
+It is intentionally lightweight: enough to guide development, not to over-prescribe.
 
+---
+
+## 1) Purpose & Architectural Goals
+
+### Purpose
+Provide a predictable structure for building features that combine:
+- Dataset exploration
+- Analysis (metrics + filters)
+- Optional AI assistance
+
+### Goals (v1)
 - Keep domain rules explicit and framework-agnostic.
 - Make feature development predictable via a feature-based structure.
-- Make system states (loading/empty/error/degraded) first-class citizens.
-- Prefer clarity and explicit boundaries over premature abstraction.
-
-### Architectural Non-goals (v1)
-- No global state management framework by default.
-- No real multi-tenant or role-based authorization model.
-- No real-time updates or streaming data.
-- No advanced caching strategy beyond default Next.js capabilities.
+- Make system states (empty/error/degraded) first-class citizens.
+- Prefer clarity over premature abstraction.
 
 ---
 
-## 2) Layering & Responsibilities
+## 2) Key Documents
 
-### `src/domain/`
-**Purpose:** Core business concepts and rules.  
-**Must not:** depend on UI, frameworks, networking, or external services.
+- **Domain Model (v1):** [DOMAIN_MODEL.md](../domain/DOMAIN_MODEL.md)
+- **ADRs:** [Architecture Decision Records](./decisions/)
 
-### `src/infra/`
-**Purpose:** External integrations and data access (mock repositories, AI gateway).  
-**Must not:** contain business decisions; only I/O, mapping, and protocol handling.
-
-### `src/features/`
-**Purpose:** Feature modules that orchestrate domain logic and infra to deliver user-facing flows.  
-**Owns:** UI state, orchestration, and interaction logic.
-
-### `src/shared/`
-**Purpose:** Reusable, domain-agnostic utilities and UI primitives.  
-**Must not:** reference domain concepts such as datasets, metrics, or insights.
-
-### `src/app/`
-**Purpose:** Route-level composition and application wiring (Next.js routing).
-
-- The layering described below follows the architectural decisions documented in
-ADR-0001 — Frontend Architecture.
+> Domain changes should be reflected in the Domain Model.
+> Architecture trade-offs should be captured as ADRs.
 
 ---
 
-## 2.1 Dependency Rules
+## 3) System Context & Core Concepts
 
-- `domain/` must not import from any other layer.
-- `infra/` may import from `domain/` for mapping purposes, but not from `features/`.
-- `features/` may import from `domain/`, `infra/`, and `shared/`.
-- `shared/` must not import from `domain/` or `features/`.
-- `app/` may import from `features/` and `shared/`, but must not access `infra/` directly.
-
-These rules enforce clear boundaries and prevent accidental coupling.
-
----
-
-## 3) Feature Modules (v1)
-
-### `features/datasets`
-**Responsibilities:**
-- List available datasets.
-- Handle dataset selection.
-
-**Owns:**
-- Dataset list state (loading / empty / error).
-- Selected dataset state.
-
-**Must not:**
-- Define dataset business rules.
-- Fetch data directly without going through `infra/`.
-
----
-
-### `features/analysis`
-**Responsibilities:**
-- Present metrics and filters derived from a selected dataset.
-
-**Owns:**
-- Filter state.
-- Metric view state.
-- UI-level derived computations.
-
-**Must not:**
-- Fetch datasets directly.
-- Encode domain invariants related to metrics.
-
----
-
-### `features/ai`
-**Responsibilities:**
-- Accept natural language queries.
-- Render AI-assisted responses.
-
-**Owns:**
-- AI query lifecycle (idle / loading / success / error).
-- Degraded mode handling.
-
-**Must not:**
-- Block core dataset exploration when AI is unavailable.
-
----
-
-## 4) Domain Layer
-
-### Domain Models (initial)
+### Core entities (v1)
 - User
 - Dataset
 - Metric
 - Insight
 - AIQuery
-
-### Domain Boundaries
-Domain rules are implemented as:
-- Value objects and types (e.g. identifiers).
-- Constructors or factories enforcing invariants.
-- Pure functions for deriving metrics or insights.
+- Filter
+- AnalysisSnapshot (optional in v1)
 
 ### Invariants (examples)
 - A `Metric` is always derived from exactly one `Dataset`.
-- An `Insight` must reference the dataset or metrics it is based on.
-- An `AIQuery` cannot be executed without dataset context in v1.
+- An `Insight` must reference the dataset context it is based on.
+- An `AIQuery` must always include dataset context.
+- Filters always apply within a dataset context.
 
 ---
 
-## 5) Data Flow
+## 4) Codebase Structure & Responsibilities
+
+### `src/domain/`
+**Purpose:** Business concepts and rules.  
+**Must not:** depend on UI/framework, networking, or external services.
+
+### `src/infra/`
+**Purpose:** Integrations and data access (mock data sources, AI gateway).  
+**Must not:** contain business decisions; only I/O and mapping.
+
+### `src/features/`
+**Purpose:** Feature modules that orchestrate domain + infra and expose UI screens/components.  
+**Owns:** user-facing flows and state coordination.
+
+### `src/shared/`
+**Purpose:** Reusable, domain-agnostic building blocks (UI primitives, generic utilities).  
+**Must not:** know about datasets/metrics/insights.
+
+### `src/app/`
+**Purpose:** Route-level composition and wiring (Next.js routing).  
+**Must not:** implement feature logic or business rules.
+
+---
+
+## 5) Feature Modules (v1)
+
+### `features/datasets`
+**Responsibilities:**
+- Dataset listing and selection.
+**Owns:**
+- dataset list state (loading/empty/error)
+- selection state
+**Notes:**
+- Selection should be representable via URL (shareable + reload-safe).
+
+### `features/analysis`
+**Responsibilities:**
+- Present metrics and filters derived from a dataset.
+**Owns:**
+- filter state
+- metric view state
+- derived computations needed by UI
+**Notes:**
+- Reads dataset context from URL (v1).
+- May later support saved views (`AnalysisSnapshot`).
+
+### `features/ai`
+**Responsibilities:**
+- Accept natural language questions and return AI-assisted responses.
+**Owns:**
+- AI query state (idle/loading/success/error)
+- degraded mode handling
+**Notes:**
+- AI is optional in v1; the product remains useful without it.
+
+---
+
+## 6) Data Flow (v1)
 
 ### Dataset exploration flow
-1. UI requests dataset list.
-2. `infra` returns datasets (mock data in v1).
-3. `features/datasets` maps data into domain-friendly shapes and updates state.
-4. Selecting a dataset triggers analysis loading.
+1. UI triggers dataset listing load.
+2. `infra` returns datasets (mock in v1).
+3. `features/datasets` maps infra data into domain shapes and updates UI state.
+4. Selecting a dataset updates selection (URL + local state).
+
+### Analysis flow
+1. User navigates to analysis with dataset context in URL.
+2. `features/analysis` loads or derives relevant metrics/filters for that dataset (mock in v1).
+3. UI presents metrics and filter placeholders (v1 skeleton).
 
 ### AI query flow
-1. User submits a question with dataset context.
-2. `features/ai` calls the AI gateway in `infra`.
-3. Gateway returns a response or error.
-4. Feature renders result or fallback.
+1. User submits a question with a selected dataset context.
+2. `features/ai` calls `infra` AI gateway.
+3. AI gateway returns a response (or error).
+4. `features/ai` renders the response; degraded mode remains usable.
 
 ---
 
-## 5.1 Infra Contracts (v1)
-
-Conceptual contracts exposed by `infra/`:
-
-- `DatasetRepository.list() -> Dataset[]`
-- `DatasetRepository.get(id) -> Dataset`
-- `AnalysisService.getMetrics(datasetId) -> Metric[]`
-- `AIGateway.ask(query, datasetId) -> AIResponse`
-
-These contracts are intentionally simple to allow replacement of mock data later.
-
----
-
-## 6) System States (v1)
-
-### Loading state
-- **Expected behavior:** Render skeleton UI and disable dependent actions.
-- **UX notes:** Avoid layout shifts; keep previous data visible during refetch.
-
----
+## 7) System States (v1)
 
 ### Empty state — No datasets available
-- **Expected behavior:** Show an explanatory empty state with a clear call to action (e.g. use sample data).
-- **UX notes:** User should still understand the product’s purpose.
-
----
+**Expected behavior:**
+- Show an empty state explaining that no datasets are available.
+- Provide a clear call to action (v1: "Use sample dataset" or "Reload").
+**UX notes:**
+- The user should still understand what the product is meant to do.
 
 ### Error state — Dataset fetch fails
-- **Expected behavior:** Show actionable error with retry.
-- **UX notes:** Preserve previous successful selection if available.
+**Expected behavior:**
+- Show an error view with retry.
+- Preserve any previously loaded dataset selection if available.
+**UX notes:**
+- Errors should be actionable, not generic.
+
+### Degraded state — AI unavailable or fails
+**Expected behavior:**
+- The user can continue exploring datasets and metrics.
+- AI panel shows a fallback message + retry.
+**UX notes:**
+- AI is optional in v1; core product remains useful without it.
 
 ---
 
-### Partial failure — Metrics fetch fails
-- **Expected behavior:** Keep dataset selected; show metrics error with retry.
-- **UX notes:** Allow switching datasets to recover.
+## 8) Decisions & Trade-offs
 
----
+- AI is treated as an optional capability (degraded mode supported).
+- Mock data enables fast iteration; infra will be replaceable later.
+- Feature modules own UI coordination; domain stays pure.
+- URL-driven dataset context improves shareability and reload safety.
 
-### Degraded state — AI unavailable
-- **Expected behavior:** Core analytics remain usable; AI panel shows fallback message.
-- **UX notes:** AI is optional and must not block primary workflows.
-
----
-
-### Retry policy (v1)
-- User-initiated retries only.
-- Preserve last successful data whenever possible.
-
----
-
-## 7) Decisions & Trade-offs
-
-- **AI treated as optional capability**  
-  *Consequence:* AI failures never block analytics; UX must clearly communicate limitations.
-
-- **Mock data first**  
-  *Consequence:* Data contracts must remain stable to avoid refactors when replacing mocks.
-
-- **Feature modules own UI orchestration; domain stays pure**  
-  *Consequence:* Feature modules may grow large; boundaries are enforced via dependency rules.
-
-- **Feature-based frontend architecture with a domain-centered core.**
-  - *Rationale*: See [ADR-0001 — Frontend Architecture](./decisions/0001-frontend-architecture.md).
+For decisions that impact architecture boundaries or major tool choices, add an ADR.
