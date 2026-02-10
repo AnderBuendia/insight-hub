@@ -5,6 +5,14 @@ It is a lightweight, evolving reference to keep terminology and invariants consi
 
 ---
 
+## Table of Contents
+
+1. [Entity Relationship Diagram (ERD)](#1-entity-relationship-diagram-erd)
+2. [Entity Definitions](#2-entity-definitions)
+3. [Invariants & Rules](#3-invariants--rules-v1)
+
+---
+
 ## 1) Entity Relationship Diagram (ERD)
 
 ```mermaid

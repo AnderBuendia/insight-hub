@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDatasets } from "@/features/datasets/state/useDatasets";
 import { PageShell } from "@/shared";
@@ -62,7 +63,14 @@ function DatasetsContent() {
             }}
           />
           {state.selectedId ? (
-            <p>Selected: {state.selectedId}</p>
+            <>
+              <p>Selected: {state.selectedId}</p>
+              <Link
+                href={`/analysis?datasetId=${encodeURIComponent(state.selectedId)}`}
+              >
+                Go to Analysis
+              </Link>
+            </>
           ) : (
             <p>Select a dataset.</p>
           )}
@@ -74,7 +82,13 @@ function DatasetsContent() {
 
 export function DatasetsPage() {
   return (
-    <Suspense fallback={<PageShell title="Datasets"><p>Loading…</p></PageShell>}>
+    <Suspense
+      fallback={
+        <PageShell title="Datasets">
+          <p>Loading…</p>
+        </PageShell>
+      }
+    >
       <DatasetsContent />
     </Suspense>
   );

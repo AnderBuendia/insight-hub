@@ -5,6 +5,19 @@ It is intentionally lightweight: enough to guide development, not to over-prescr
 
 ---
 
+## Table of Contents
+
+1. [Purpose & Architectural Goals](#1-purpose--architectural-goals)
+2. [Key Documents](#2-key-documents)
+3. [System Context & Core Concepts](#3-system-context--core-concepts)
+4. [Codebase Structure & Responsibilities](#4-codebase-structure--responsibilities)
+5. [Feature Modules](#5-feature-modules-v1)
+6. [Data Flow](#6-data-flow-v1)
+7. [System States](#7-system-states-v1)
+8. [Decisions & Trade-offs](#8-decisions--trade-offs)
+
+---
+
 ## 1) Purpose & Architectural Goals
 
 ### Purpose
