@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageShell } from "@/shared";
 import { AnalysisLayout } from "@/features/analysis/ui/AnalysisLayout";
 
-export function AnalysisPage() {
+function AnalysisContent() {
   const searchParams = useSearchParams();
   const datasetId = searchParams.get("datasetId");
 
@@ -40,5 +41,19 @@ export function AnalysisPage() {
         }
       />
     </PageShell>
+  );
+}
+
+export function AnalysisPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageShell title="Analysis">
+          <p>Loading…</p>
+        </PageShell>
+      }
+    >
+      <AnalysisContent />
+    </Suspense>
   );
 }
