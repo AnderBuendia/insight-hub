@@ -1,10 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageShell } from "@/shared";
 import { AnalysisLayout } from "@/features/analysis/ui/AnalysisLayout";
+import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
+import { MetricsPlaceholder } from "@/features/analysis/ui/MetricsPlaceholder";
+import { FiltersPlaceholder } from "@/features/analysis/ui/FiltersPlaceholder";
 
 function AnalysisContent() {
   const searchParams = useSearchParams();
@@ -14,9 +16,7 @@ function AnalysisContent() {
   if (!datasetId) {
     return (
       <PageShell title="Analysis">
-        <p>No dataset selected.</p>
-        <p>Select a dataset first to start analysis.</p>
-        <Link href="/datasets">Go to Datasets</Link>
+        <MissingDatasetState />
       </PageShell>
     );
   }
@@ -27,18 +27,8 @@ function AnalysisContent() {
       <AnalysisLayout
         title="Dataset Analysis"
         subtitle={`Dataset: ${datasetId}`}
-        left={
-          <section>
-            <h2>Metrics</h2>
-            <p>Placeholder — metrics will be displayed here.</p>
-          </section>
-        }
-        right={
-          <section>
-            <h2>Filters</h2>
-            <p>Placeholder — filters will be configured here.</p>
-          </section>
-        }
+        left={<MetricsPlaceholder />}
+        right={<FiltersPlaceholder />}
       />
     </PageShell>
   );
