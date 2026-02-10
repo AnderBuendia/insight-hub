@@ -28,7 +28,7 @@ describe("AnalysisPage", () => {
       render(<AnalysisPage />);
 
       // Assert: empty state messages and link
-      expect(screen.getByText("No dataset selected.")).toBeInTheDocument();
+      expect(screen.getByText("No dataset selected")).toBeInTheDocument();
       expect(screen.getByText("Select a dataset first to start analysis.")).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /go to datasets/i })).toHaveAttribute("href", "/datasets");
     });
@@ -41,7 +41,7 @@ describe("AnalysisPage", () => {
       render(<AnalysisPage />);
 
       // Assert: empty state is shown (empty string is falsy)
-      expect(screen.getByText("No dataset selected.")).toBeInTheDocument();
+      expect(screen.getByText("No dataset selected")).toBeInTheDocument();
     });
   });
 
