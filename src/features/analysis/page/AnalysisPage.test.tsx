@@ -29,6 +29,10 @@ describe("AnalysisPage", () => {
     it("renders empty state when no datasetId is provided", () => {
       // Arrange
       mockUseSearchParams.mockReturnValue(new URLSearchParams(""));
+      mockUseAnalysis.mockReturnValue({
+        state: { status: "idle" },
+        actions: { reload: vi.fn() },
+      });
 
       // Act
       render(<AnalysisPage />);
@@ -42,6 +46,10 @@ describe("AnalysisPage", () => {
     it("displays empty state when datasetId parameter is empty string", () => {
       // Arrange
       mockUseSearchParams.mockReturnValue(new URLSearchParams("datasetId="));
+      mockUseAnalysis.mockReturnValue({
+        state: { status: "idle" },
+        actions: { reload: vi.fn() },
+      });
 
       // Act
       render(<AnalysisPage />);
