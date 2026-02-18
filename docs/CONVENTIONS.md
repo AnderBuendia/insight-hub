@@ -53,3 +53,28 @@ export function ContentCard() {
 - Test files live next to the component they test (e.g., `Component.tsx` → `Component.test.tsx`)
 - Follow AAA pattern: Arrange, Act, Assert
 - See [TESTING.md](TESTING.md) for comprehensive testing guidelines
+
+## Branching & Versioning
+
+This project uses **Trunk-Based Development** (see ADR-0002).
+
+### Branching
+- `main` is the single integration trunk and should always be green.
+- Feature branches are short-lived and created from `main`.
+- Branch naming:
+  - `IHSQD-<id>-<short-slug>` (example: `IHSQD-22-trunk-cutover`)
+- Avoid long-lived `*-rc` branches for regular development.
+  - If stabilization is needed, use short-lived `release/x.y` branches only.
+
+### Versioning
+- We use SemVer for releases: `vX.Y.Z`
+- Release candidates are tagged (immutable): `vX.Y.Z-rc.N`
+- Tags are the source of truth for release milestones (not branches).
+
+## CI Expectations
+
+- CI must pass before merging to `main`:
+  - lint, typecheck, build, tests, and coverage thresholds
+- Coverage thresholds are enforced in CI (currently 50%).
+- Pre-commit hooks run fast checks on staged files.
+- Pre-push hooks run the test suite to catch failures early.

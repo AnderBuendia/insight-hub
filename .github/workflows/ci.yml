@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - "*-rc"
 
 jobs:
   quality:
@@ -35,28 +34,20 @@ jobs:
 
       - name: Build
         run: npm run build
-      
-      - name: Test with Coverage
-        run: npm run test:coverage
 
-      - name: Generate Coverage Report
-        if: github.event_name == 'pull_request'
+      - name: Test with Coverage
         id: coverage
         run: |
-          # Run coverage and capture output
-          npm run test:coverage > coverage.txt 2>&1 || true
-          
-          # Extract coverage data
+          npm run test:coverage 2>&1 | tee coverage.txt
+
           THRESHOLD=50
-          
-          # Parse overall coverage
           COVERAGE_LINE=$(grep "All files" coverage.txt | head -1)
+
           STATEMENTS=$(echo "$COVERAGE_LINE" | awk '{print $4}')
           BRANCHES=$(echo "$COVERAGE_LINE" | awk '{print $6}')
           FUNCTIONS=$(echo "$COVERAGE_LINE" | awk '{print $8}')
           LINES=$(echo "$COVERAGE_LINE" | awk '{print $10}')
-          
-          # Function to get status icon
+
           get_icon() {
             value=$(echo "$1" | tr -d '%')
             if (( $(echo "$value >= $THRESHOLD" | bc -l) )); then
@@ -65,34 +56,31 @@ jobs:
               echo "🔴"
             fi
           }
-          
-          # Create markdown report
+
           cat > coverage-report.md << EOF
           ## 📊 Coverage Report
-          
+
           ### Overall Coverage
-          
+
           | Metric | Coverage | Status |
           |--------|----------|--------|
           | Statements | ${STATEMENTS}% | $(get_icon "$STATEMENTS") |
           | Branches | ${BRANCHES}% | $(get_icon "$BRANCHES") |
           | Functions | ${FUNCTIONS}% | $(get_icon "$FUNCTIONS") |
           | Lines | ${LINES}% | $(get_icon "$LINES") |
-          
+
           **Threshold:** ${THRESHOLD}% 🟢 Pass | 🔴 Fail
-          
+
           ### Coverage by Directory
-          
           EOF
-          
-          # Extract directory-level coverage
+
           grep -E "src/.*\s+\|" coverage.txt | grep -v "All files" | while read -r line; do
             DIR=$(echo "$line" | awk '{print $1}')
             STMTS=$(echo "$line" | awk '{print $3}')
             ICON=$(get_icon "$STMTS")
             echo "- **$DIR**: ${STMTS}% $ICON" >> coverage-report.md
           done
-          
+
           echo "report<<EOF" >> $GITHUB_OUTPUT
           cat coverage-report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -103,21 +91,20 @@ jobs:
         with:
           script: |
             const report = `${{ steps.coverage.outputs.report }}`;
-            
-            // Find previous coverage comment
+
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
+
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('📊 Coverage Report')
             );
-            
+
             const commentBody = `${report}\n\n---\n*Updated: ${new Date().toISOString()}*`;
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
