@@ -140,6 +140,23 @@ Pull requests automatically receive coverage reports with:
 4. **Open Pull Request** — CI runs full quality gates
 5. **Review coverage report** — Check automated PR comment
 6. **Merge after approval** — Squash and merge to `main`
+7. **Tag milestone releases** — use `vX.Y.Z-rc.N` tags for release candidates
+
+---
+
+## 🚢 Release & Branching Strategy
+
+This project follows **Trunk-Based Development** (ADR-0002):
+
+- `main` is the single integration trunk and is always expected to be green.
+- Work is done in short-lived feature branches (e.g., `IHSQD-123-some-change`) targeting `main`.
+- Releases are tracked via **immutable tags** (no long-lived `*-rc` development branches).
+
+### Tagging
+- Release candidates: `vX.Y.Z-rc.N` (e.g., `v0.1.0-rc.1`)
+- Stable releases: `vX.Y.Z` (future — once production deploy exists)
+
+CI runs on every PR and on pushes to `main`. Coverage thresholds are enforced in CI.
 
 ---
 
@@ -151,12 +168,13 @@ The project is in active development with evolving architecture and domain model
 
 ### Recent Milestones
 
-- ✅ Testing infrastructure with Vitest
-- ✅ CI/CD pipeline with quality gates
+- ✅ Dataset exploration feature (usable)
+- ✅ Analysis experience v1 (UI + mock data + explicit states)
+- ✅ Testing infrastructure with Vitest + RTL
+- ✅ CI pipeline with quality gates
 - ✅ Coverage enforcement (50% threshold)
-- ✅ Automated coverage reporting in PRs
+- ✅ Automated PR coverage reporting
 - ✅ Git hooks for pre-commit/pre-push checks
-- 🔄 Dataset exploration feature (in progress)
 
 ---
 
@@ -181,6 +199,5 @@ Contributions are welcome! Please ensure:
 
 ## 🔗 Links
 
-- **Documentation:** [docs/](docs/)
-- **Architecture Decisions:** [docs/decisions/](docs/decisions/)
-- **Domain Model:** [docs/DOMAIN.md](docs/DOMAIN.md)
+- **Domain Overview:** [docs/DOMAIN.md](docs/DOMAIN.md)
+- **Domain Model (ERD + invariants):** [docs/domain/DOMAIN_MODEL.md](docs/domain/DOMAIN_MODEL.md)
