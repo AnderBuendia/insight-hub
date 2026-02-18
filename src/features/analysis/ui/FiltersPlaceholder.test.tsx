@@ -89,7 +89,7 @@ describe("FiltersPlaceholder", () => {
   describe("Accessibility", () => {
     it("uses semantic label elements", () => {
       // Arrange & Act
-      const { container } = render(<FiltersPlaceholder />);
+      render(<FiltersPlaceholder />);
 
       // Assert
       const dateRangeLabel = screen.getByText("Date Range");
