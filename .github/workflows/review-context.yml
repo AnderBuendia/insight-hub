@@ -1,0 +1,83 @@
+name: Review Context (summary comment)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  context_comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build review summary
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+
+          BASE="origin/${{ github.base_ref }}"
+          HEAD="${{ github.sha }}"
+          FILES="$(git diff --name-only "$BASE...$HEAD" || true)"
+
+          count() { echo "$FILES" | grep -E "$1" -c || true; }
+
+          APP_CHANGED=$(count '^src/app/')
+          DOMAIN_CHANGED=$(count '^src/domain/')
+          INFRA_CHANGED=$(count '^src/infra/')
+          CONFIG_CHANGED=$(count '^(next\.config\.|tsconfig\.|package\.json|package-lock\.json|\.env|src/middleware\.(ts|js)|middleware\.(ts|js))')
+
+          ROUTE_HANDLERS=$(count '^src/app/.*/route\.(ts|js)$')
+          PAGES=$(count '^src/app/.*/page\.(ts|tsx|js|jsx)$')
+          LAYOUTS=$(count '^src/app/.*/layout\.(ts|tsx|js|jsx)$')
+
+          SERVER_ACTIONS=$(git diff "$BASE...$HEAD" | grep -c 'use server' || true)
+          CLIENT_COMPONENTS=$(git diff "$BASE...$HEAD" | grep -c 'use client' || true)
+
+          DEPS_CHANGED=$(git diff --name-only "$BASE...$HEAD" | grep -E 'package\.json|package-lock\.json' -c || true)
+
+          {
+            echo "<!-- claude-review-context -->"
+            echo "## 🤖 Review Context (auto)"
+            echo
+            echo "**Commit:** \`${HEAD}\`"
+            echo "**Base branch:** \`${{ github.base_ref }}\`"
+            echo
+            echo "### 📦 Layer impact"
+            echo "- src/app: ${APP_CHANGED} file(s)"
+            echo "- src/domain: ${DOMAIN_CHANGED} file(s)"
+            echo "- src/infra: ${INFRA_CHANGED} file(s)"
+            echo "- Config / middleware / deps: ${CONFIG_CHANGED}"
+            echo
+            echo "### ⚛️ Next.js (App Router)"
+            echo "- Route handlers changed: ${ROUTE_HANDLERS}"
+            echo "- Pages changed: ${PAGES}"
+            echo "- Layouts changed: ${LAYOUTS}"
+            echo "- Server Actions touched: ${SERVER_ACTIONS}"
+            echo "- Client Components touched: ${CLIENT_COMPONENTS}"
+            echo
+            echo "### 📦 Dependencies"
+            echo "- package.json / lockfile changed: ${DEPS_CHANGED}"
+            echo
+            echo "### 🧭 Review guidance"
+            echo "- Focus on layer boundaries (domain stays framework-agnostic)"
+            echo "- Verify server/client boundaries in src/app"
+            echo "- Check error handling and async behavior"
+            echo "- Confirm no config changes introduce breaking behavior"
+            echo
+            echo "_Use this summary together with the PR diff in Copilot Chat._"
+          } > review_context.md
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: review_context.md
+          edit-mode: replace
+          comment-identifier: claude-review-context

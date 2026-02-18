@@ -1,5 +1,13 @@
 # InsightHub — Domain Definition
 
+## Table of Contents
+
+1. [Problem Statement](#1-problem-statement)
+2. [Core Concepts](#2-core-concepts)
+3. [User Journeys](#3-user-journeys-v1)
+
+---
+
 ## 1) Problem Statement
 
 ### Target users

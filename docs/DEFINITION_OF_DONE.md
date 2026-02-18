@@ -1,5 +1,13 @@
 # Definition of Done
 
+## Table of Contents
+
+1. [Completion Criteria](#completion-criteria)
+
+---
+
+## Completion Criteria
+
 A task or feature is considered done when:
 
 - The solution matches the intended domain behavior
