@@ -52,6 +52,7 @@ Adopt **trunk-based development with short-lived release branches only when need
 - Keep existing quality gates (lint, typecheck, build, tests, coverage).
 - Add required status checks before merge to `main`.
 - Add deployment workflow with explicit promotion and rollback strategy.
+- `main` is always releasable.
 
 ## Consequences
 
