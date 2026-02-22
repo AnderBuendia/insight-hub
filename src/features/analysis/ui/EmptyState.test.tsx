@@ -35,7 +35,7 @@ describe("EmptyState", () => {
           title={customTitle}
           description={customDescription}
           onReload={mockOnReload}
-        />
+        />,
       );
 
       // Assert

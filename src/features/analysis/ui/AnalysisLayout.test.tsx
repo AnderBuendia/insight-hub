@@ -16,7 +16,7 @@ describe("AnalysisLayout", () => {
           title="Test Title"
           left={<div>Left content</div>}
           right={<div>Right content</div>}
-        />
+        />,
       );
 
       // Assert
@@ -31,7 +31,7 @@ describe("AnalysisLayout", () => {
           subtitle="Test Subtitle"
           left={<div>Left</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert
@@ -45,7 +45,7 @@ describe("AnalysisLayout", () => {
           title="Test Title"
           left={<div>Left</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert
@@ -61,7 +61,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<div>Left content</div>}
           right={<div>Right content</div>}
-        />
+        />,
       );
 
       // Assert
@@ -78,7 +78,7 @@ describe("AnalysisLayout", () => {
           rightTitle="Custom Filters"
           left={<div>Left</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert
@@ -95,7 +95,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<div data-testid="left-content">Left Content Text</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert
@@ -110,7 +110,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<div>Left</div>}
           right={<div data-testid="right-content">Right Content Text</div>}
-        />
+        />,
       );
 
       // Assert
@@ -125,7 +125,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<span>Left side</span>}
           right={<span>Right side</span>}
-        />
+        />,
       );
 
       // Assert
@@ -142,7 +142,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<div>Left</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert
@@ -157,7 +157,7 @@ describe("AnalysisLayout", () => {
           title="Test"
           left={<div>Left</div>}
           right={<div>Right</div>}
-        />
+        />,
       );
 
       // Assert

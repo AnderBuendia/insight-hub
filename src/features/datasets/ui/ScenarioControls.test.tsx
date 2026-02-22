@@ -49,15 +49,15 @@ describe("ScenarioControls", () => {
       // Assert: success button should be pressed by default
       expect(screen.getByRole("button", { name: "success" })).toHaveAttribute(
         "aria-pressed",
-        "true"
+        "true",
       );
       expect(screen.getByRole("button", { name: "empty" })).toHaveAttribute(
         "aria-pressed",
-        "false"
+        "false",
       );
       expect(screen.getByRole("button", { name: "error" })).toHaveAttribute(
         "aria-pressed",
-        "false"
+        "false",
       );
     });
   });
@@ -125,15 +125,15 @@ describe("ScenarioControls", () => {
       // Assert: empty button should now be pressed
       expect(screen.getByRole("button", { name: "success" })).toHaveAttribute(
         "aria-pressed",
-        "false"
+        "false",
       );
       expect(screen.getByRole("button", { name: "empty" })).toHaveAttribute(
         "aria-pressed",
-        "true"
+        "true",
       );
       expect(screen.getByRole("button", { name: "error" })).toHaveAttribute(
         "aria-pressed",
-        "false"
+        "false",
       );
     });
 
@@ -145,7 +145,7 @@ describe("ScenarioControls", () => {
 
       // Act: click through all scenarios
       render(<ScenarioControls onReload={onReload} />);
-      
+
       await user.click(screen.getByRole("button", { name: "empty" }));
       await user.click(screen.getByRole("button", { name: "error" }));
       await user.click(screen.getByRole("button", { name: "success" }));
@@ -167,7 +167,7 @@ describe("ScenarioControls", () => {
       // Act
       render(<ScenarioControls onReload={onReload} />);
       const successButton = screen.getByRole("button", { name: "success" });
-      
+
       await user.click(successButton);
       await user.click(successButton);
 

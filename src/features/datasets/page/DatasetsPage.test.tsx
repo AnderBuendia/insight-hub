@@ -27,7 +27,7 @@ describe("DatasetsPage", () => {
     it("displays loading message while fetching datasets", () => {
       // Arrange: mock infra with a pending promise
       vi.spyOn(DatasetsInfra, "listDatasets").mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
 
       // Act
@@ -150,7 +150,7 @@ describe("DatasetsPage", () => {
       expect(screen.getByText("Selected: ds_1")).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /go to analysis/i })).toHaveAttribute(
         "href",
-        "/analysis?datasetId=ds_1"
+        "/analysis?datasetId=ds_1",
       );
     });
 

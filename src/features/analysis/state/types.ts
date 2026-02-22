@@ -1,4 +1,4 @@
-import type { InfraAnalysis, InfraFilter, InfraMetric } from "@/infra/analysis/types";
+import type { InfraFilter, InfraMetric } from "@/infra/analysis/types";
 
 export type AnalysisState =
   | { status: "idle" }

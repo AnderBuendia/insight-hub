@@ -92,7 +92,7 @@ describe("FiltersList", () => {
       ];
 
       // Act
-      const { container } = render(<FiltersList filters={filters} />);
+      render(<FiltersList filters={filters} />);
 
       // Assert
       const fieldElement = screen.getByText("username");

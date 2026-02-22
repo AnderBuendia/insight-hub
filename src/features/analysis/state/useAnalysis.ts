@@ -48,7 +48,7 @@ export function useAnalysis(datasetId: string | null) {
         await load();
       } catch (err) {
         if (!cancelled) {
-          console.error("Failed to load analysis:", err);
+          console.error("Failed to load analysis:", err); // eslint-disable-line no-console
           // We keep state as-is; infra errors should be returned via result.ok === false.
           // This catch is just a safety net.
         }
