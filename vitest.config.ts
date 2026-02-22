@@ -24,10 +24,10 @@ export default defineConfig({
       // Note: Thresholds are enforced by scripts/test-coverage.js
       // Vitest 4.x reports but doesn't fail on threshold violations by default
       thresholds: {
-        lines: 50,
-        functions: 50,
-        branches: 50,
-        statements: 50,
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
       },
     },
   },
