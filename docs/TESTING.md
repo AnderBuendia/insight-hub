@@ -33,7 +33,7 @@ This document defines the standard approach for writing and organizing tests acr
 - **Test Runner:** Vitest 4.x
 - **Testing Library:** React Testing Library + jest-dom
 - **Environment:** jsdom (browser simulation)
-- **Coverage:** v8 provider with 50% minimum threshold
+- **Coverage:** v8 provider with 80% minimum threshold
 
 ### Setup Files
 
@@ -42,7 +42,7 @@ This document defines the standard approach for writing and organizing tests acr
 coverage: {
   provider: "v8",
   reporter: ["text", "json", "html"],
-  thresholds: { lines: 50, functions: 50, branches: 50, statements: 50 }
+  thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 }
 }
 ```
 
@@ -561,10 +561,10 @@ vi.mock("external-library", () => ({
 
 ### Minimum Thresholds (Enforced in CI)
 
-- **Lines:** 50%
-- **Functions:** 50%
-- **Branches:** 50%
-- **Statements:** 50%
+- **Lines:** 80%
+- **Functions:** 80%
+- **Branches:** 80%
+- **Statements:** 80%
 
 ### Coverage Strategy
 

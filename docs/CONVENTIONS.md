@@ -125,6 +125,6 @@ This project uses **Trunk-Based Development** (see ADR-0002).
 
 - CI must pass before merging to `main`:
   - lint, typecheck, build, tests, and coverage thresholds
-- Coverage thresholds are enforced in CI (currently 50%).
+- Coverage thresholds are enforced in CI (currently 80%).
 - Pre-commit hooks run fast checks on staged files.
 - Pre-push hooks run the test suite to catch failures early.

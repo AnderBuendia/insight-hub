@@ -40,7 +40,7 @@ jobs:
         run: |
           npm run test:coverage 2>&1 | tee coverage.txt
 
-          THRESHOLD=50
+          THRESHOLD=80
           COVERAGE_LINE=$(grep "All files" coverage.txt | head -1)
 
           STATEMENTS=$(echo "$COVERAGE_LINE" | awk '{print $4}')
