@@ -64,7 +64,7 @@ describe("DatasetList", () => {
 
       // Act
       const { container } = render(
-        <DatasetList datasets={datasetsWithEmptyDesc} onSelect={onSelect} />
+        <DatasetList datasets={datasetsWithEmptyDesc} onSelect={onSelect} />,
       );
 
       // Assert: name is visible but no description div
@@ -185,10 +185,10 @@ describe("DatasetList", () => {
       // Assert: should have list structure
       const list = screen.getByRole("list");
       expect(list).toBeInTheDocument();
-      
+
       const listItems = screen.getAllByRole("listitem");
       expect(listItems).toHaveLength(3);
-      
+
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(3);
     });

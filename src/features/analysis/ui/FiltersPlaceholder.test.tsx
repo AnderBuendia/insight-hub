@@ -94,7 +94,7 @@ describe("FiltersPlaceholder", () => {
       // Assert
       const dateRangeLabel = screen.getByText("Date Range");
       const categoryLabel = screen.getByText("Category");
-      
+
       expect(dateRangeLabel.tagName).toBe("LABEL");
       expect(categoryLabel.tagName).toBe("LABEL");
     });

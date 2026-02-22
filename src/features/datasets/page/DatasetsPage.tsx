@@ -16,13 +16,13 @@ function DatasetsContent() {
   const selectedFromUrl = searchParams.get("selected") ?? undefined;
 
   useEffect(() => {
-    if (state.status !== "success") return;
-    if (!selectedFromUrl) return;
-    if (state.selectedId === selectedFromUrl) return;
+    if (state.status !== "success") {return;}
+    if (!selectedFromUrl) {return;}
+    if (state.selectedId === selectedFromUrl) {return;}
 
     // Only select if the dataset exists
     const exists = state.datasets.some((d) => d.id === selectedFromUrl);
-    if (exists) actions.selectDataset(selectedFromUrl);
+    if (exists) {actions.selectDataset(selectedFromUrl);}
   }, [state, selectedFromUrl, actions]);
 
   return (

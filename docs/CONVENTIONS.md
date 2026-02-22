@@ -5,7 +5,10 @@
 1. [Naming](#naming)
 2. [Structure](#structure)
 3. [Styling](#styling)
-4. [Testing](#testing)
+4. [Code Quality & Linting](#code-quality--linting)
+5. [Testing](#testing)
+6. [Branching & Versioning](#branching--versioning)
+7. [CI Expectations](#ci-expectations)
 
 ---
 
@@ -46,6 +49,53 @@ export function ContentCard() {
 // src/features/analysis/page/AnalysisPage.tsx
 <ContentCard />
 ```
+
+## Code Quality & Linting
+
+ESLint is configured with strict rules to maintain code quality and consistency.
+
+### Key Rules Enforced
+
+**Code Quality:**
+- **No console.log** — Warns on `console.log` statements (use proper logging or debugging tools)
+  - To disable for specific files (e.g., scripts), add `/* eslint-disable no-console */` at the top
+  - To disable for a single line: `// eslint-disable-next-line no-console`
+- **Unused variables** — Error (not warning) for unused variables/constants
+  - Exception: Variables prefixed with `_` are allowed (e.g., `_unusedParam`)
+- **Prefer const** — Use `const` over `let` when variables are never reassigned
+- **No var** — Only `let` and `const` are allowed
+- **Strict equality** — Always use `===` and `!==` (never `==` or `!=`)
+- **No debugger** — Debugger statements are not allowed in production code
+
+**Formatting:**
+- **No trailing spaces** — Lines must not end with whitespace
+- **Trailing commas** — Required in multiline arrays/objects for cleaner diffs
+- **Max line length** — 170 characters (URLs, strings, and template literals are exempt)
+- **No multiple empty lines** — Maximum of 1 consecutive empty line
+- **Semicolons** — Always required
+- **Double quotes** — Enforce double quotes for strings
+
+**TypeScript:**
+- **No explicit any** — Avoid `any` type when possible (warning)
+- **Type-only imports** — Use `import type` for type-only imports
+- **Return types** — TypeScript infers return types automatically (no explicit declaration required)
+
+**React:**
+- **Self-closing components** — Components without children must be self-closing
+- **Boolean props** — Omit value when `true` (e.g., `<Component enabled />` not `<Component enabled={true} />`)
+- **Exhaustive deps** — React hooks dependencies must be complete (warning)
+
+### Running the Linter
+
+```bash
+# Check for linting errors
+npm run lint
+
+# Auto-fix issues when possible
+npm run lint -- --fix
+```
+
+ESLint runs automatically on commit via Husky hooks for staged files.
 
 ## Testing
 - Test files: `[ComponentName].test.tsx` or `[hookName].test.ts`

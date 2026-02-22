@@ -35,16 +35,16 @@ export function useDatasets() {
       try {
         await load();
       } catch (err) {
-        console.error("Failed to load datasets:", err);
+        console.error("Failed to load datasets:", err); // eslint-disable-line no-console
       }
     }
-    
+
     loadInitial();
   }, [load]);
 
   const selectDataset = useCallback((id: DatasetId) => {
     setState((prev) => {
-      if (prev.status !== "success") return prev;
+      if (prev.status !== "success") {return prev;}
       return { ...prev, selectedId: id };
     });
   }, []);
