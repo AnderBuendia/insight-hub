@@ -17,7 +17,7 @@ InsightHub empowers users to explore datasets, analyze metrics with custom filte
 - **Clear Domain Boundaries** — Domain-driven design with explicit entity relationships
 - **Feature-Based Structure** — Organized by user-facing capabilities, not technical layers
 - **Explicit System States** — Graceful handling of empty, error, and degraded states
-- **Testability First** — 50% minimum coverage enforced in CI
+- **Testability First** — 80% minimum coverage enforced in CI
 
 ---
 
@@ -64,7 +64,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `npm run lint` | Run ESLint checks |
 | `npm run typecheck` | Run TypeScript type checks |
 | `npm test` | Run unit tests in watch mode |
-| `npm run test:coverage` | Run tests with coverage enforcement (50% threshold) |
+| `npm run test:coverage` | Run tests with coverage enforcement (80% threshold) |
 
 ---
 
@@ -118,7 +118,7 @@ src/
 ## 🧪 Testing & Quality
 
 - **Unit Tests:** Vitest + React Testing Library
-- **Coverage Threshold:** 50% minimum (statements, branches, functions, lines)
+- **Coverage Threshold:** 80% minimum (statements, branches, functions, lines)
 - **CI Enforcement:** Tests run on every PR with automatic coverage reports
 - **Pre-commit Hooks:** Lint and format checks via Husky + lint-staged
 - **Pre-push Hooks:** Full test suite execution
@@ -172,7 +172,7 @@ The project is in active development with evolving architecture and domain model
 - ✅ Analysis experience v1 (UI + mock data + explicit states)
 - ✅ Testing infrastructure with Vitest + RTL
 - ✅ CI pipeline with quality gates
-- ✅ Coverage enforcement (50% threshold)
+- ✅ Coverage enforcement (80% threshold)
 - ✅ Automated PR coverage reporting
 - ✅ Git hooks for pre-commit/pre-push checks
 
@@ -183,7 +183,7 @@ The project is in active development with evolving architecture and domain model
 Contributions are welcome! Please ensure:
 
 1. All tests pass (`npm test`)
-2. Coverage meets minimum threshold (50%)
+2. Coverage meets minimum threshold (80%)
 3. Code follows ESLint rules (`npm run lint`)
 4. TypeScript compiles without errors (`npm run typecheck`)
 5. Commits follow conventional commit format
