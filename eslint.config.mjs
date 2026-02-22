@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
 
       // Formatting & Style
       "no-trailing-spaces": "error", // Disallow trailing whitespace at the end of lines
+      "eol-last": ["error", "always"], // Require newline at end of file
       "comma-dangle": ["error", "always-multiline"], // Require trailing commas in multiline
       "max-len": [
         "error",
