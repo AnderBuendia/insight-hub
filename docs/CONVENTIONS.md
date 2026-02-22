@@ -58,6 +58,8 @@ ESLint is configured with strict rules to maintain code quality and consistency.
 
 **Code Quality:**
 - **No console.log** — Warns on `console.log` statements (use proper logging or debugging tools)
+  - To disable for specific files (e.g., scripts), add `/* eslint-disable no-console */` at the top
+  - To disable for a single line: `// eslint-disable-next-line no-console`
 - **Unused variables** — Error (not warning) for unused variables/constants
   - Exception: Variables prefixed with `_` are allowed (e.g., `_unusedParam`)
 - **Prefer const** — Use `const` over `let` when variables are never reassigned
@@ -74,9 +76,9 @@ ESLint is configured with strict rules to maintain code quality and consistency.
 - **Double quotes** — Enforce double quotes for strings
 
 **TypeScript:**
-- **Explicit return types** — Function return types should be explicit (warning)
 - **No explicit any** — Avoid `any` type when possible (warning)
 - **Type-only imports** — Use `import type` for type-only imports
+- **Return types** — TypeScript infers return types automatically (no explicit declaration required)
 
 **React:**
 - **Self-closing components** — Components without children must be self-closing
