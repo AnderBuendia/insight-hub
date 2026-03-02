@@ -69,6 +69,7 @@ ESLint is configured with strict rules to maintain code quality and consistency.
 
 **Formatting:**
 - **No trailing spaces** — Lines must not end with whitespace
+- **Newline at end of file** — All files must end with a newline character
 - **Trailing commas** — Required in multiline arrays/objects for cleaner diffs
 - **Max line length** — 170 characters (URLs, strings, and template literals are exempt)
 - **No multiple empty lines** — Maximum of 1 consecutive empty line
@@ -93,9 +94,12 @@ npm run lint
 
 # Auto-fix issues when possible
 npm run lint -- --fix
+
+# Check TypeScript types
+npm run typecheck
 ```
 
-ESLint runs automatically on commit via Husky hooks for staged files.
+ESLint and TypeScript type checking run automatically on commit via Husky hooks.
 
 ## Testing
 - Test files: `[ComponentName].test.tsx` or `[hookName].test.ts`
@@ -126,5 +130,5 @@ This project uses **Trunk-Based Development** (see ADR-0002).
 - CI must pass before merging to `main`:
   - lint, typecheck, build, tests, and coverage thresholds
 - Coverage thresholds are enforced in CI (currently 80%).
-- Pre-commit hooks run fast checks on staged files.
+- Pre-commit hooks run lint on staged files and TypeScript type checking.
 - Pre-push hooks run the test suite to catch failures early.

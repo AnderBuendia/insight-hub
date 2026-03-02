@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAnalysis } from "@/features/analysis/state/useAnalysis";
 import { AnalysisLayout } from "@/features/analysis/ui/AnalysisLayout";
+import { AIPanel } from "@/features/ai/page/AIPanel";
 import { PageShell } from "@/shared";
 import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
 import { LoadingState } from "@/features/analysis/ui/LoadingState";
@@ -56,7 +57,12 @@ function AnalysisContent() {
         title="Dataset Analysis"
         subtitle={`Dataset: ${state.datasetId}`}
         left={<MetricsList metrics={state.metrics} />}
-        right={<FiltersList filters={state.filters} />}
+        right={
+          <>
+            <FiltersList filters={state.filters} />
+            <AIPanel />
+          </>
+        }
       />
     </PageShell>
   );
