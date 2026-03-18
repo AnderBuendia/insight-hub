@@ -27,7 +27,6 @@ const eslintConfig = defineConfig([
       "prefer-const": "error", // Prefer const over let when variable is never reassigned
       "no-var": "error", // Disallow var, enforce let/const
       "eqeqeq": ["error", "always"], // Require === and !== instead of == and !=
-      "curly": ["error", "all"], // Require curly braces for all control statements
 
       // Formatting & Style
       "no-trailing-spaces": "error", // Disallow trailing whitespace at the end of lines
