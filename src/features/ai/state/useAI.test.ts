@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AIInfra } from "@/infra";
+import type { SubmitAIResult } from "@/infra";
 
 // Mock the infra module
 vi.mock("@/infra", () => ({
@@ -27,7 +28,7 @@ describe("useAI", () => {
         const { useAI } = await import("./useAI");
 
         // Act
-        const { result } = renderHook(() => useAI());
+        const { result } = renderHook(() => useAI("ds_123"));
 
         // Assert
         expect(result.current.state).toEqual({ status: "disabled" });
@@ -38,13 +39,15 @@ describe("useAI", () => {
         const { useAI } = await import("./useAI");
 
         // Act
-        const { result } = renderHook(() => useAI());
+        const { result } = renderHook(() => useAI("ds_123"));
 
         // Assert
         expect(result.current.actions).toHaveProperty("setPrompt");
         expect(result.current.actions).toHaveProperty("submit");
+        expect(result.current.actions).toHaveProperty("retry");
         expect(typeof result.current.actions.setPrompt).toBe("function");
         expect(typeof result.current.actions.submit).toBe("function");
+        expect(typeof result.current.actions.retry).toBe("function");
       });
 
       it("ignores datasetId parameter when disabled", async () => {
@@ -63,7 +66,7 @@ describe("useAI", () => {
       it("setPrompt does nothing when disabled", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
-        const { result } = renderHook(() => useAI());
+        const { result } = renderHook(() => useAI("ds_123"));
 
         // Act
         act(() => {
@@ -77,7 +80,7 @@ describe("useAI", () => {
       it("submit does nothing when disabled", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
-        const { result } = renderHook(() => useAI());
+        const { result } = renderHook(() => useAI("ds_123"));
 
         // Act
         await act(async () => {
@@ -131,12 +134,12 @@ describe("useAI", () => {
     });
 
     describe("Initial State", () => {
-      it("returns idle state with empty datasetId by default", async () => {
+      it("returns idle state with empty string datasetId", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
 
         // Act
-        const { result } = renderHook(() => useAI());
+        const { result } = renderHook(() => useAI(""));
 
         // Assert
         expect(result.current.state).toEqual({
@@ -198,9 +201,7 @@ describe("useAI", () => {
         });
 
         // Assert
-        if (result.current.state.status !== "disabled") {
-          expect(result.current.state.prompt).toBe("Final prompt");
-        }
+        expect(result.current.state).toMatchObject({ prompt: "Final prompt" });
       });
 
       it("handles empty string prompt", async () => {
@@ -218,9 +219,7 @@ describe("useAI", () => {
         });
 
         // Assert
-        if (result.current.state.status !== "disabled") {
-          expect(result.current.state.prompt).toBe("");
-        }
+        expect(result.current.state).toMatchObject({ prompt: "" });
       });
     });
 
@@ -432,6 +431,38 @@ describe("useAI", () => {
         expect(result.current.state).toBe(initialState);
       });
 
+      it("discards stale response when datasetId changes mid-flight", async () => {
+        // Arrange
+        const { useAI } = await import("./useAI");
+        let resolveQuery!: (value: SubmitAIResult) => void;
+        vi.mocked(AIInfra.submitAIQuery).mockImplementation(
+          () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+        );
+
+        const { result, rerender } = renderHook(
+          ({ datasetId }) => useAI(datasetId),
+          { initialProps: { datasetId: "ds_123" } },
+        );
+
+        act(() => { result.current.actions.setPrompt("Query"); });
+        act(() => { void result.current.actions.submit(); });
+        rerender({ datasetId: "ds_456" });
+
+        // Resolve the stale query for ds_123
+        await act(async () => {
+          resolveQuery({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        // Assert - stale response discarded, state reflects new datasetId
+        await waitFor(() => {
+          expect(result.current.state).toEqual({
+            status: "idle",
+            datasetId: "ds_456",
+            prompt: "Query",
+          });
+        });
+      });
+
       it("resets to idle when datasetId changes during loading", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
@@ -449,7 +480,7 @@ describe("useAI", () => {
         });
 
         act(() => {
-          result.current.actions.submit();
+          void result.current.actions.submit();
         });
 
         // Verify loading state
@@ -470,13 +501,9 @@ describe("useAI", () => {
     });
 
     describe("Edge Cases", () => {
-      it("handles submit with empty prompt", async () => {
+      it("does not submit when prompt is empty", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
-        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
-          ok: true,
-          data: { answer: "response" },
-        });
 
         const { result } = renderHook(() => useAI("ds_123"));
 
@@ -485,11 +512,32 @@ describe("useAI", () => {
           await result.current.actions.submit();
         });
 
-        // Assert
-        expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
+        // Assert - guard prevents empty submission
+        expect(AIInfra.submitAIQuery).not.toHaveBeenCalled();
+        expect(result.current.state).toEqual({
+          status: "idle",
           datasetId: "ds_123",
           prompt: "",
         });
+      });
+
+      it("does not submit when prompt is whitespace only", async () => {
+        // Arrange
+        const { useAI } = await import("./useAI");
+        const { result } = renderHook(() => useAI("ds_123"));
+
+        act(() => {
+          result.current.actions.setPrompt("   ");
+        });
+
+        // Act
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        // Assert
+        expect(AIInfra.submitAIQuery).not.toHaveBeenCalled();
+        expect(result.current.state.status).toBe("idle");
       });
 
       it("handles multiple submits in sequence", async () => {
@@ -567,6 +615,64 @@ describe("useAI", () => {
           prompt: "Query",
           response: { answer: "success" },
         });
+      });
+    });
+  });
+
+  describe("retry Action", () => {
+    beforeEach(async () => {
+      vi.doMock("@/shared", () => ({
+        FeatureFlags: { aiEnabled: true },
+      }));
+    });
+
+    afterEach(() => {
+      vi.resetModules();
+    });
+
+    it("retry is the same function reference as submit", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      // Assert
+      expect(result.current.actions.retry).toBe(result.current.actions.submit);
+    });
+
+    it("retry re-submits the same prompt from error state", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery)
+        .mockResolvedValueOnce({
+          ok: false,
+          error: { message: "Temporary error", code: "UNEXPECTED" },
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          data: { answer: "Recovered" },
+        });
+
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("Query"); });
+      await act(async () => { await result.current.actions.submit(); });
+
+      expect(result.current.state.status).toBe("error");
+
+      // Act
+      await act(async () => { await result.current.actions.retry(); });
+
+      // Assert
+      expect(result.current.state).toEqual({
+        status: "success",
+        datasetId: "ds_123",
+        prompt: "Query",
+        response: { answer: "Recovered" },
+      });
+      expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
+      expect(AIInfra.submitAIQuery).toHaveBeenNthCalledWith(2, {
+        datasetId: "ds_123",
+        prompt: "Query",
       });
     });
   });
