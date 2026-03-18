@@ -60,7 +60,7 @@ function AnalysisContent() {
         right={
           <>
             <FiltersList filters={state.filters} />
-            <AIPanel />
+            <AIPanel datasetId={datasetId} />
           </>
         }
       />
