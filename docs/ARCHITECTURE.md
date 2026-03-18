@@ -163,6 +163,7 @@ Provide a predictable structure for building features that combine:
 - AI panel shows a fallback message + retry.
 **UX notes:**
 - AI is optional in v1; core product remains useful without it.
+- AI is gated behind NEXT_PUBLIC_FEATURE_AI and designed as optional (degraded-capable).
 
 ---
 
