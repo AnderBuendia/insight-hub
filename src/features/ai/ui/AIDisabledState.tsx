@@ -6,4 +6,4 @@ export function AIDisabledState() {
       </p>
     </div>
   );
-};
+}
