@@ -38,6 +38,7 @@ jobs:
       - name: Test with Coverage
         id: coverage
         run: |
+          set -o pipefail
           npm run test:coverage 2>&1 | tee coverage.txt
 
           THRESHOLD=80
