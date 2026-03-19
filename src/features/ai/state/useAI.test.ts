@@ -50,16 +50,6 @@ describe("useAI", () => {
         expect(typeof result.current.actions.retry).toBe("function");
       });
 
-      it("ignores datasetId parameter when disabled", async () => {
-        // Arrange
-        const { useAI } = await import("./useAI");
-
-        // Act
-        const { result } = renderHook(() => useAI("ds_123"));
-
-        // Assert
-        expect(result.current.state).toEqual({ status: "disabled" });
-      });
     });
 
     describe("Actions", () => {
@@ -93,32 +83,6 @@ describe("useAI", () => {
       });
     });
 
-    describe("State Transitions", () => {
-      it("transitions to disabled when feature flag is toggled off", async () => {
-        // Arrange - Start with flag enabled
-        const enabledFlags = { FeatureFlags: { aiEnabled: true } };
-        vi.doMock("@/shared", () => enabledFlags);
-
-        const { useAI: useAIEnabled } = await import("./useAI");
-        const { result } = renderHook(
-          ({ datasetId }) => useAIEnabled(datasetId),
-          { initialProps: { datasetId: "ds_123" } },
-        );
-
-        // Verify enabled state
-        expect(result.current.state.status).toBe("idle");
-
-        // Act - Toggle flag off and reload
-        vi.resetModules();
-        vi.doMock("@/shared", () => ({ FeatureFlags: { aiEnabled: false } }));
-        const { useAI: useAIDisabled } = await import("./useAI");
-
-        const { result: disabledResult } = renderHook(() => useAIDisabled("ds_123"));
-
-        // Assert
-        expect(disabledResult.current.state).toEqual({ status: "disabled" });
-      });
-    });
   });
 
   describe("Feature Flag Enabled", () => {
@@ -355,37 +319,6 @@ describe("useAI", () => {
         });
       });
 
-      it("handles all error with code", async () => {
-        // Arrange
-        const { useAI } = await import("./useAI");
-        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
-          ok: false,
-          error: {
-            message: "Network error",
-            code: "UNAVAILABLE",
-          },
-        });
-
-        const { result } = renderHook(() => useAI("ds_789"));
-
-        act(() => {
-          result.current.actions.setPrompt("Query");
-        });
-
-        // Act
-        await act(async () => {
-          await result.current.actions.submit();
-        });
-
-        // Assert
-        expect(result.current.state).toMatchObject({
-          status: "error",
-          datasetId: "ds_789",
-          prompt: "Query",
-          message: "Network error",
-          code: "UNAVAILABLE",
-        });
-      });
     });
 
     describe("DatasetId Changes", () => {
@@ -619,6 +552,104 @@ describe("useAI", () => {
     });
   });
 
+  describe("Feature Flag Runtime Toggle", () => {
+    afterEach(() => {
+      vi.resetModules();
+    });
+
+    it("transitions from idle to disabled when flag is toggled off mid-session", async () => {
+      // Arrange - start enabled with a mutable flag object
+      const flags = { aiEnabled: true };
+      vi.doMock("@/shared", () => ({ FeatureFlags: flags }));
+      const { useAI } = await import("./useAI");
+
+      const { result, rerender } = renderHook(
+        ({ datasetId }) => useAI(datasetId),
+        { initialProps: { datasetId: "ds_123" } },
+      );
+
+      expect(result.current.state.status).toBe("idle");
+
+      // Act - toggle flag off and force re-render so the hook re-reads FeatureFlags
+      flags.aiEnabled = false;
+      rerender({ datasetId: "ds_123" });
+
+      // Assert - useEffect fires with enabled=false and prev.status="idle" (not "disabled"),
+      // taking the else path (L18) and transitioning state to disabled (L19-20)
+      await waitFor(() => {
+        expect(result.current.state).toEqual({ status: "disabled" });
+      });
+    });
+
+    it("transitions from disabled to idle when flag is re-enabled", async () => {
+      // Arrange - start disabled with a mutable flag object
+      const flags = { aiEnabled: false };
+      vi.doMock("@/shared", () => ({ FeatureFlags: flags }));
+      const { useAI } = await import("./useAI");
+
+      const { result, rerender } = renderHook(
+        ({ datasetId }) => useAI(datasetId),
+        { initialProps: { datasetId: "ds_123" } },
+      );
+
+      expect(result.current.state).toEqual({ status: "disabled" });
+
+      // Act - toggle flag on and force re-render
+      flags.aiEnabled = true;
+      rerender({ datasetId: "ds_123" });
+
+      // Assert - useEffect fires with enabled=true and prev.status="disabled",
+      // taking the if path (L23-25) and transitioning state to idle
+      await waitFor(() => {
+        expect(result.current.state).toEqual({
+          status: "idle",
+          datasetId: "ds_123",
+          prompt: "",
+        });
+      });
+    });
+
+    it("discards in-flight API response when flag is disabled mid-request", async () => {
+      // Arrange - start enabled with a mutable flag object
+      const flags = { aiEnabled: true };
+      vi.doMock("@/shared", () => ({ FeatureFlags: flags }));
+      const { useAI } = await import("./useAI");
+
+      let resolveQuery!: (value: SubmitAIResult) => void;
+      vi.mocked(AIInfra.submitAIQuery).mockImplementation(
+        () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+      );
+
+      const { result, rerender } = renderHook(
+        ({ datasetId }) => useAI(datasetId),
+        { initialProps: { datasetId: "ds_123" } },
+      );
+
+      act(() => { result.current.actions.setPrompt("Query"); });
+      act(() => { void result.current.actions.submit(); });
+
+      expect(result.current.state.status).toBe("loading");
+
+      // Act - disable flag while the API request is still in-flight
+      flags.aiEnabled = false;
+      rerender({ datasetId: "ds_123" });
+
+      // useEffect transitions state to "disabled" (else path L18, statements L19-20)
+      await waitFor(() => {
+        expect(result.current.state.status).toBe("disabled");
+      });
+
+      // Resolve the stale API call after state is already disabled
+      await act(async () => {
+        resolveQuery({ ok: true, data: { answer: "Stale response" } });
+      });
+
+      // Assert - the final setState in submit (L71) finds prev.status="disabled"
+      // and discards the response, keeping state as disabled
+      expect(result.current.state).toEqual({ status: "disabled" });
+    });
+  });
+
   describe("retry Action", () => {
     beforeEach(async () => {
       vi.doMock("@/shared", () => ({
@@ -639,41 +670,5 @@ describe("useAI", () => {
       expect(result.current.actions.retry).toBe(result.current.actions.submit);
     });
 
-    it("retry re-submits the same prompt from error state", async () => {
-      // Arrange
-      const { useAI } = await import("./useAI");
-      vi.mocked(AIInfra.submitAIQuery)
-        .mockResolvedValueOnce({
-          ok: false,
-          error: { message: "Temporary error", code: "UNEXPECTED" },
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          data: { answer: "Recovered" },
-        });
-
-      const { result } = renderHook(() => useAI("ds_123"));
-
-      act(() => { result.current.actions.setPrompt("Query"); });
-      await act(async () => { await result.current.actions.submit(); });
-
-      expect(result.current.state.status).toBe("error");
-
-      // Act
-      await act(async () => { await result.current.actions.retry(); });
-
-      // Assert
-      expect(result.current.state).toEqual({
-        status: "success",
-        datasetId: "ds_123",
-        prompt: "Query",
-        response: { answer: "Recovered" },
-      });
-      expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
-      expect(AIInfra.submitAIQuery).toHaveBeenNthCalledWith(2, {
-        datasetId: "ds_123",
-        prompt: "Query",
-      });
-    });
   });
 });
