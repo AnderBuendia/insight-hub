@@ -75,7 +75,7 @@ jobs:
           ### Coverage by Directory
           EOF
 
-          grep -E "src/.*\s+\|" coverage.txt | grep -v "All files" | while read -r line; do
+          grep -E "^\s+\S[^|]+\|" coverage.txt | grep -v "All files\|File\|^-" | while read -r line; do
             DIR=$(echo "$line" | awk '{print $1}')
             STMTS=$(echo "$line" | awk '{print $3}')
             ICON=$(get_icon "$STMTS")
