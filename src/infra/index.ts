@@ -3,3 +3,10 @@ export * as DatasetsInfra from "./datasets/repository";
 export type { DatasetsScenario } from "./datasets/types";
 export * as AnalysisInfra from "./analysis/repository";
 export type { AnalysisScenario } from "./analysis/types";
+export * as AIInfra from "./ai/repository";
+export type {
+  AIGatewayScenario,
+  InfraAIRequest,
+  InfraAIResponse,
+  SubmitAIResult,
+} from "./ai/types";
