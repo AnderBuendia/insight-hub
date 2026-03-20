@@ -13,7 +13,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "node scripts/test-coverage.js",
     "prepare": "husky",
-    "validations": "npm run lint && npm run typecheck && npm test -- --run"
+    "validations": "npm run lint && npm run typecheck && npm run test:coverage"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
