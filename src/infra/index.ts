@@ -10,3 +10,4 @@ export type {
   InfraAIResponse,
   SubmitAIResult,
 } from "./ai/types";
+export * as AnalysisSnapshotsInfra from "./analysisSnapshots/repository";
