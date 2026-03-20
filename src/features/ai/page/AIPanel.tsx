@@ -51,7 +51,8 @@ export function AIPanel({ datasetId = "" }: { datasetId?: string }) {
             <button
               type="button"
               onClick={actions.clear}
-              className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
+              disabled={isLoading}
+              className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Clear
             </button>

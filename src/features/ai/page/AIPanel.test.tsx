@@ -502,6 +502,32 @@ describe("AIPanel", () => {
         expect(screen.getByRole("textbox")).toHaveValue("");
         expect(screen.getByText(/Ask a question about this dataset/i)).toBeInTheDocument();
       });
+
+      it("is disabled while a follow-up request is loading", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockResolvedValueOnce({ ok: true, data: { answer: "First answer" } })
+          .mockImplementationOnce(() => new Promise(() => {})); // never resolves
+        render(<AIPanel datasetId="ds_123" />);
+
+        // Build one history item
+        await user.type(screen.getByRole("textbox"), "First question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+        await waitFor(() => {
+          expect(screen.getByText("First answer")).toBeInTheDocument();
+        });
+
+        // Act - submit follow-up (stays loading)
+        await user.type(screen.getByRole("textbox"), "Follow-up question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert - Clear button disabled while Thinking
+        await waitFor(() => {
+          expect(screen.getByText(/Thinking/i)).toBeInTheDocument();
+        });
+        expect(screen.getByRole("button", { name: /Clear/i })).toBeDisabled();
+      });
     });
   });
 });
