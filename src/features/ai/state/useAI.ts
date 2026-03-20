@@ -9,7 +9,7 @@ export function useAI(datasetId: string) {
 
   const [state, setState] = useState<AIState>(() => {
     if (!FeatureFlags.aiEnabled) return { status: "disabled" };
-    return { status: "idle", datasetId, prompt: "" };
+    return { status: "idle", datasetId, prompt: "", history: [] };
   });
 
   useEffect(() => {
@@ -22,12 +22,12 @@ export function useAI(datasetId: string) {
 
       if (prev.status === "disabled") {
         promptRef.current = "";
-        return { status: "idle", datasetId, prompt: "" };
+        return { status: "idle", datasetId, prompt: "", history: [] };
       }
 
       if (prev.datasetId === datasetId) return prev;
 
-      return { status: "idle", datasetId, prompt: prev.prompt };
+      return { status: "idle", datasetId, prompt: prev.prompt, history: [] };
     });
   }, [enabled, datasetId]);
 
@@ -59,6 +59,7 @@ export function useAI(datasetId: string) {
         status: "loading",
         datasetId: requestDatasetId,
         prompt,
+        history: prev.history,
       };
     });
 
@@ -67,31 +68,59 @@ export function useAI(datasetId: string) {
       prompt,
     });
 
-    setState((prev) => {
-      if (prev.status === "disabled") return prev;
-      if (prev.datasetId !== requestDatasetId) return prev;
-
-      if (!result.ok) {
+    if (!result.ok) {
+      setState((prev) => {
+        if (prev.status === "disabled") return prev;
+        if (prev.datasetId !== requestDatasetId) return prev;
+        if (prev.status !== "loading") return prev;
         return {
           status: "error",
           datasetId: requestDatasetId,
           prompt,
+          history: prev.history,
           message: result.error.message,
-          code: result.error.code,
         };
+      });
+      return;
+    }
+
+    promptRef.current = "";
+
+    setState((prev) => {
+      if (prev.status === "disabled") return prev;
+      if (prev.datasetId !== requestDatasetId) {
+        promptRef.current = prompt;
+        return prev;
       }
+      if (prev.status !== "loading") return prev;
+
+      const newItem = { prompt, response: result.data };
+      const nextHistory = [...prev.history, newItem].slice(-3);
 
       return {
         status: "success",
         datasetId: requestDatasetId,
-        prompt,
-        response: result.data,
+        prompt: "",
+        history: nextHistory,
       };
+    });
+  }, [enabled, datasetId]);
+
+  const clear = useCallback(() => {
+    if (!enabled) return;
+
+    promptRef.current = "";
+
+    setState({
+      status: "idle",
+      datasetId,
+      prompt: "",
+      history: [],
     });
   }, [enabled, datasetId]);
 
   return {
     state,
-    actions: { setPrompt, submit, retry: submit },
+    actions: { setPrompt, submit, retry: submit, clear },
   };
 }

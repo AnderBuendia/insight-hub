@@ -209,6 +209,31 @@ describe("AIPanel", () => {
         });
       });
 
+      it("shows 'Thinking…' bubble when loading with chat history", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockResolvedValueOnce({ ok: true, data: { answer: "First answer" } })
+          .mockImplementationOnce(() => new Promise(() => {})); // never resolves
+        render(<AIPanel datasetId="ds_123" />);
+
+        // Build one history item
+        await user.type(screen.getByRole("textbox"), "First question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+        await waitFor(() => {
+          expect(screen.getByText("First answer")).toBeInTheDocument();
+        });
+
+        // Act - Submit second query (never resolves so stays loading)
+        await user.type(screen.getByRole("textbox"), "Second question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert
+        await waitFor(() => {
+          expect(screen.getByText(/Thinking/i)).toBeInTheDocument();
+        });
+      });
+
       it("calls AIInfra with correct parameters on submit", async () => {
         // Arrange
         const user = userEvent.setup();
@@ -322,8 +347,7 @@ describe("AIPanel", () => {
         // Verify form is re-enabled
         expect(screen.getByRole("textbox")).not.toBeDisabled();
 
-        // Act - Second query
-        await user.clear(screen.getByRole("textbox"));
+        // Act - Second query (textarea already empty after success)
         await user.type(screen.getByRole("textbox"), "Second query");
         await user.click(screen.getByRole("button", { name: /Ask/i }));
 
@@ -332,6 +356,26 @@ describe("AIPanel", () => {
           expect(screen.getByText("Second response")).toBeInTheDocument();
         });
         expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
+      });
+
+      it("clears textarea after successful submission", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "Done" },
+        });
+        render(<AIPanel datasetId="ds_123" />);
+
+        // Act
+        await user.type(screen.getByRole("textbox"), "My question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert
+        await waitFor(() => {
+          expect(screen.getByText("Done")).toBeInTheDocument();
+        });
+        expect(screen.getByRole("textbox")).toHaveValue("");
       });
     });
 
@@ -409,6 +453,80 @@ describe("AIPanel", () => {
 
         // Assert
         expect(screen.getByRole("textbox")).toHaveValue("My query");
+      });
+    });
+
+    describe("Clear Button", () => {
+      it("appears after a successful submission", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "Some answer" },
+        });
+        render(<AIPanel datasetId="ds_123" />);
+
+        expect(screen.queryByRole("button", { name: /Clear/i })).not.toBeInTheDocument();
+
+        // Act
+        await user.type(screen.getByRole("textbox"), "My question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert
+        await waitFor(() => {
+          expect(screen.getByRole("button", { name: /Clear/i })).toBeInTheDocument();
+        });
+      });
+
+      it("resets chat history and returns to idle state", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "Some answer" },
+        });
+        render(<AIPanel datasetId="ds_123" />);
+
+        await user.type(screen.getByRole("textbox"), "My question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+        await waitFor(() => {
+          expect(screen.getByText("Some answer")).toBeInTheDocument();
+        });
+
+        // Act
+        await user.click(screen.getByRole("button", { name: /Clear/i }));
+
+        // Assert - back to empty state
+        expect(screen.queryByText("Some answer")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Clear/i })).not.toBeInTheDocument();
+        expect(screen.getByRole("textbox")).toHaveValue("");
+        expect(screen.getByText(/Ask a question about this dataset/i)).toBeInTheDocument();
+      });
+
+      it("is disabled while a follow-up request is loading", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockResolvedValueOnce({ ok: true, data: { answer: "First answer" } })
+          .mockImplementationOnce(() => new Promise(() => {})); // never resolves
+        render(<AIPanel datasetId="ds_123" />);
+
+        // Build one history item
+        await user.type(screen.getByRole("textbox"), "First question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+        await waitFor(() => {
+          expect(screen.getByText("First answer")).toBeInTheDocument();
+        });
+
+        // Act - submit follow-up (stays loading)
+        await user.type(screen.getByRole("textbox"), "Follow-up question");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert - Clear button disabled while Thinking
+        await waitFor(() => {
+          expect(screen.getByText(/Thinking/i)).toBeInTheDocument();
+        });
+        expect(screen.getByRole("button", { name: /Clear/i })).toBeDisabled();
       });
     });
   });

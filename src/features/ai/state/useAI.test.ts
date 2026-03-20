@@ -45,9 +45,11 @@ describe("useAI", () => {
         expect(result.current.actions).toHaveProperty("setPrompt");
         expect(result.current.actions).toHaveProperty("submit");
         expect(result.current.actions).toHaveProperty("retry");
+        expect(result.current.actions).toHaveProperty("clear");
         expect(typeof result.current.actions.setPrompt).toBe("function");
         expect(typeof result.current.actions.submit).toBe("function");
         expect(typeof result.current.actions.retry).toBe("function");
+        expect(typeof result.current.actions.clear).toBe("function");
       });
 
     });
@@ -110,6 +112,7 @@ describe("useAI", () => {
           status: "idle",
           datasetId: "",
           prompt: "",
+          history: [],
         });
       });
 
@@ -125,6 +128,7 @@ describe("useAI", () => {
           status: "idle",
           datasetId: "ds_123",
           prompt: "",
+          history: [],
         });
       });
     });
@@ -145,6 +149,7 @@ describe("useAI", () => {
           status: "idle",
           datasetId: "ds_123",
           prompt: "What is the average?",
+          history: [],
         });
       });
 
@@ -214,6 +219,7 @@ describe("useAI", () => {
           status: "loading",
           datasetId: "ds_123",
           prompt: "Test query",
+          history: [],
         });
 
         // Wait for completion
@@ -221,12 +227,12 @@ describe("useAI", () => {
           await submitPromise;
         });
 
-        // Assert - Success state
+        // Assert - Success state: prompt cleared, response moved into history
         expect(result.current.state).toEqual({
           status: "success",
           datasetId: "ds_123",
-          prompt: "Test query",
-          response: mockResponse,
+          prompt: "",
+          history: [{ prompt: "Test query", response: mockResponse }],
         });
       });
 
@@ -314,8 +320,8 @@ describe("useAI", () => {
           status: "error",
           datasetId: "ds_123",
           prompt: "Test query",
+          history: [],
           message: "API request failed",
-          code: "BAD_REQUEST",
         });
       });
 
@@ -343,6 +349,7 @@ describe("useAI", () => {
             status: "idle",
             datasetId: "ds_456",
             prompt: "My query",
+            history: [],
           });
         });
       });
@@ -392,7 +399,60 @@ describe("useAI", () => {
             status: "idle",
             datasetId: "ds_456",
             prompt: "Query",
+            history: [],
           });
+        });
+      });
+
+      it("preserves promptRef after stale success so next submit is not a no-op", async () => {
+        // Arrange – reproduces the P1 bug: promptRef was cleared before the staleness
+        // guard ran, leaving the textarea showing a prompt that could not be submitted.
+        const { useAI } = await import("./useAI");
+        let resolveStale!: (value: SubmitAIResult) => void;
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockImplementationOnce(
+            () => new Promise<SubmitAIResult>((resolve) => { resolveStale = resolve; }),
+          )
+          .mockResolvedValueOnce({ ok: true, data: { answer: "Fresh response" } });
+
+        const { result, rerender } = renderHook(
+          ({ datasetId }) => useAI(datasetId),
+          { initialProps: { datasetId: "ds_123" } },
+        );
+
+        // Start a request for ds_123, then switch to ds_456 mid-flight
+        act(() => { result.current.actions.setPrompt("Query"); });
+        act(() => { void result.current.actions.submit(); });
+        rerender({ datasetId: "ds_456" });
+
+        // Stale success arrives – should NOT clear promptRef
+        await act(async () => {
+          resolveStale({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        await waitFor(() => {
+          expect(result.current.state).toMatchObject({
+            status: "idle",
+            datasetId: "ds_456",
+            prompt: "Query",
+          });
+        });
+
+        // Act – submit again; if promptRef was incorrectly cleared this would be a no-op
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        // Assert – request fired and fresh response stored in history
+        expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
+        expect(AIInfra.submitAIQuery).toHaveBeenLastCalledWith({
+          datasetId: "ds_456",
+          prompt: "Query",
+        });
+        expect(result.current.state).toMatchObject({
+          status: "success",
+          datasetId: "ds_456",
+          history: [{ prompt: "Query", response: { answer: "Fresh response" } }],
         });
       });
 
@@ -428,6 +488,7 @@ describe("useAI", () => {
             status: "idle",
             datasetId: "ds_456",
             prompt: "Query",
+            history: [],
           });
         });
       });
@@ -451,6 +512,7 @@ describe("useAI", () => {
           status: "idle",
           datasetId: "ds_123",
           prompt: "",
+          history: [],
         });
       });
 
@@ -545,8 +607,8 @@ describe("useAI", () => {
         expect(result.current.state).toEqual({
           status: "success",
           datasetId: "ds_123",
-          prompt: "Query",
-          response: { answer: "success" },
+          prompt: "",
+          history: [{ prompt: "Query", response: { answer: "success" } }],
         });
       });
     });
@@ -605,6 +667,7 @@ describe("useAI", () => {
           status: "idle",
           datasetId: "ds_123",
           prompt: "",
+          history: [],
         });
       });
     });
@@ -670,5 +733,192 @@ describe("useAI", () => {
       expect(result.current.actions.retry).toBe(result.current.actions.submit);
     });
 
+  });
+
+  describe("History Behavior", () => {
+    beforeEach(async () => {
+      vi.doMock("@/shared", () => ({
+        FeatureFlags: { aiEnabled: true },
+      }));
+    });
+
+    afterEach(() => {
+      vi.resetModules();
+    });
+
+    it("clears prompt after successful submit", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+        ok: true,
+        data: { answer: "response" },
+      });
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("My question"); });
+
+      // Act
+      await act(async () => { await result.current.actions.submit(); });
+
+      // Assert
+      expect(result.current.state).toMatchObject({ status: "success", prompt: "" });
+    });
+
+    it("accumulates responses in history", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery)
+        .mockResolvedValueOnce({ ok: true, data: { answer: "Answer 1" } })
+        .mockResolvedValueOnce({ ok: true, data: { answer: "Answer 2" } });
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      // Act
+      act(() => { result.current.actions.setPrompt("Question 1"); });
+      await act(async () => { await result.current.actions.submit(); });
+      act(() => { result.current.actions.setPrompt("Question 2"); });
+      await act(async () => { await result.current.actions.submit(); });
+
+      // Assert
+      expect(result.current.state).toMatchObject({
+        status: "success",
+        history: [
+          { prompt: "Question 1", response: { answer: "Answer 1" } },
+          { prompt: "Question 2", response: { answer: "Answer 2" } },
+        ],
+      });
+    });
+
+    it("caps history at 3 items", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+        ok: true,
+        data: { answer: "response" },
+      });
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      // Act - submit 4 times
+      for (let i = 1; i <= 4; i++) {
+        act(() => { result.current.actions.setPrompt(`Question ${i}`); });
+        await act(async () => { await result.current.actions.submit(); });
+      }
+
+      // Assert - only last 3 items kept
+      expect(result.current.state).toMatchObject({ status: "success" });
+      if (result.current.state.status === "success") {
+        expect(result.current.state.history).toHaveLength(3);
+        expect(result.current.state.history[0].prompt).toBe("Question 2");
+        expect(result.current.state.history[2].prompt).toBe("Question 4");
+      }
+    });
+
+    it("preserves history on error", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery)
+        .mockResolvedValueOnce({ ok: true, data: { answer: "OK" } })
+        .mockResolvedValueOnce({ ok: false, error: { code: "UNEXPECTED", message: "Oops" } });
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("Good question"); });
+      await act(async () => { await result.current.actions.submit(); });
+      act(() => { result.current.actions.setPrompt("Bad question"); });
+      await act(async () => { await result.current.actions.submit(); });
+
+      // Assert - history from previous success is preserved on error
+      expect(result.current.state).toMatchObject({
+        status: "error",
+        history: [{ prompt: "Good question", response: { answer: "OK" } }],
+      });
+    });
+  });
+
+  describe("clear Action", () => {
+    beforeEach(async () => {
+      vi.doMock("@/shared", () => ({
+        FeatureFlags: { aiEnabled: true },
+      }));
+    });
+
+    afterEach(() => {
+      vi.resetModules();
+    });
+
+    it("resets to idle with empty prompt and history", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+        ok: true,
+        data: { answer: "response" },
+      });
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("My question"); });
+      await act(async () => { await result.current.actions.submit(); });
+      expect(result.current.state).toMatchObject({ status: "success" });
+
+      // Act
+      act(() => { result.current.actions.clear(); });
+
+      // Assert
+      expect(result.current.state).toEqual({
+        status: "idle",
+        datasetId: "ds_123",
+        prompt: "",
+        history: [],
+      });
+    });
+
+    it("does nothing when disabled", async () => {
+      // Arrange - reset modules so the new doMock takes effect
+      vi.resetModules();
+      vi.doMock("@/shared", () => ({ FeatureFlags: { aiEnabled: false } }));
+      const { useAI: useAIDisabled } = await import("./useAI");
+      const { result } = renderHook(() => useAIDisabled("ds_123"));
+
+      expect(result.current.state).toEqual({ status: "disabled" });
+
+      // Act
+      act(() => { result.current.actions.clear(); });
+
+      // Assert
+      expect(result.current.state).toEqual({ status: "disabled" });
+    });
+
+    it("discards in-flight response when clear is called during loading", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      let resolveQuery!: (value: SubmitAIResult) => void;
+      vi.mocked(AIInfra.submitAIQuery).mockImplementation(
+        () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+      );
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("In-flight question"); });
+      act(() => { void result.current.actions.submit(); });
+      expect(result.current.state.status).toBe("loading");
+
+      // Act - user clears while request is still pending
+      act(() => { result.current.actions.clear(); });
+      expect(result.current.state).toEqual({
+        status: "idle",
+        datasetId: "ds_123",
+        prompt: "",
+        history: [],
+      });
+
+      // Resolve the now-stale request
+      await act(async () => {
+        resolveQuery({ ok: true, data: { answer: "Should not appear" } });
+      });
+
+      // Assert - state remains idle, history does not reappear
+      expect(result.current.state).toEqual({
+        status: "idle",
+        datasetId: "ds_123",
+        prompt: "",
+        history: [],
+      });
+    });
   });
 });
