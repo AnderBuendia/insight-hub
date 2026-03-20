@@ -1,6 +1,8 @@
 ## Summary
 <!-- Briefly explain what this PR does and why it exists -->
 
+**JIRA Ticket**: https://contactoanderbuendia.atlassian.net/browse/IHSQD-XXXX
+
 ## Context
 <!-- 
 What problem does this PR address?
