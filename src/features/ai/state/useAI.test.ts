@@ -404,6 +404,58 @@ describe("useAI", () => {
         });
       });
 
+      it("preserves promptRef after stale success so next submit is not a no-op", async () => {
+        // Arrange – reproduces the P1 bug: promptRef was cleared before the staleness
+        // guard ran, leaving the textarea showing a prompt that could not be submitted.
+        const { useAI } = await import("./useAI");
+        let resolveStale!: (value: SubmitAIResult) => void;
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockImplementationOnce(
+            () => new Promise<SubmitAIResult>((resolve) => { resolveStale = resolve; }),
+          )
+          .mockResolvedValueOnce({ ok: true, data: { answer: "Fresh response" } });
+
+        const { result, rerender } = renderHook(
+          ({ datasetId }) => useAI(datasetId),
+          { initialProps: { datasetId: "ds_123" } },
+        );
+
+        // Start a request for ds_123, then switch to ds_456 mid-flight
+        act(() => { result.current.actions.setPrompt("Query"); });
+        act(() => { void result.current.actions.submit(); });
+        rerender({ datasetId: "ds_456" });
+
+        // Stale success arrives – should NOT clear promptRef
+        await act(async () => {
+          resolveStale({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        await waitFor(() => {
+          expect(result.current.state).toMatchObject({
+            status: "idle",
+            datasetId: "ds_456",
+            prompt: "Query",
+          });
+        });
+
+        // Act – submit again; if promptRef was incorrectly cleared this would be a no-op
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        // Assert – request fired and fresh response stored in history
+        expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
+        expect(AIInfra.submitAIQuery).toHaveBeenLastCalledWith({
+          datasetId: "ds_456",
+          prompt: "Query",
+        });
+        expect(result.current.state).toMatchObject({
+          status: "success",
+          datasetId: "ds_456",
+          history: [{ prompt: "Query", response: { answer: "Fresh response" } }],
+        });
+      });
+
       it("resets to idle when datasetId changes during loading", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
@@ -831,6 +883,42 @@ describe("useAI", () => {
 
       // Assert
       expect(result.current.state).toEqual({ status: "disabled" });
+    });
+
+    it("discards in-flight response when clear is called during loading", async () => {
+      // Arrange
+      const { useAI } = await import("./useAI");
+      let resolveQuery!: (value: SubmitAIResult) => void;
+      vi.mocked(AIInfra.submitAIQuery).mockImplementation(
+        () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+      );
+      const { result } = renderHook(() => useAI("ds_123"));
+
+      act(() => { result.current.actions.setPrompt("In-flight question"); });
+      act(() => { void result.current.actions.submit(); });
+      expect(result.current.state.status).toBe("loading");
+
+      // Act - user clears while request is still pending
+      act(() => { result.current.actions.clear(); });
+      expect(result.current.state).toEqual({
+        status: "idle",
+        datasetId: "ds_123",
+        prompt: "",
+        history: [],
+      });
+
+      // Resolve the now-stale request
+      await act(async () => {
+        resolveQuery({ ok: true, data: { answer: "Should not appear" } });
+      });
+
+      // Assert - state remains idle, history does not reappear
+      expect(result.current.state).toEqual({
+        status: "idle",
+        datasetId: "ds_123",
+        prompt: "",
+        history: [],
+      });
     });
   });
 });

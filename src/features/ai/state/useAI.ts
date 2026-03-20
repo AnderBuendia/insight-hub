@@ -72,6 +72,7 @@ export function useAI(datasetId: string) {
       setState((prev) => {
         if (prev.status === "disabled") return prev;
         if (prev.datasetId !== requestDatasetId) return prev;
+        if (prev.status !== "loading") return prev;
         return {
           status: "error",
           datasetId: requestDatasetId,
@@ -87,7 +88,11 @@ export function useAI(datasetId: string) {
 
     setState((prev) => {
       if (prev.status === "disabled") return prev;
-      if (prev.datasetId !== requestDatasetId) return prev;
+      if (prev.datasetId !== requestDatasetId) {
+        promptRef.current = prompt;
+        return prev;
+      }
+      if (prev.status !== "loading") return prev;
 
       const newItem = { prompt, response: result.data };
       const nextHistory = [...prev.history, newItem].slice(-3);
