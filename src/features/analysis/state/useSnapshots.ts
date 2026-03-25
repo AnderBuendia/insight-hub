@@ -98,7 +98,6 @@ export function useSnapshots(datasetId: string) {
   return {
     state,
     actions: {
-      load,
       save,
       clear,
       select,
