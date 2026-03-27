@@ -15,7 +15,7 @@ const defaultProps = {
   snapshots: [],
   onSave: vi.fn(),
   onSelect: vi.fn(),
-  onClear: vi.fn(),
+  onDeleteAll: vi.fn(),
 };
 
 afterEach(() => {
@@ -77,7 +77,7 @@ describe("SnapshotsPanel", () => {
       );
 
       expect(screen.getByText("Dataset: ds_1")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /clear all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /delete all/i })).toBeInTheDocument();
     });
 
     it("calls onSave when save button is clicked", async () => {
@@ -96,20 +96,50 @@ describe("SnapshotsPanel", () => {
       expect(onSave).toHaveBeenCalledOnce();
     });
 
-    it("calls onClear when clear all is clicked", async () => {
-      const onClear = vi.fn();
+    it("calls onDeleteAll when clear all is clicked", async () => {
+      const onDeleteAll = vi.fn();
       render(
         <SnapshotsPanel
           {...defaultProps}
           status="success"
           snapshots={[snapshot]}
-          onClear={onClear}
+          onDeleteAll={onDeleteAll}
         />,
       );
 
-      await userEvent.click(screen.getByRole("button", { name: /clear all/i }));
+      await userEvent.click(screen.getByRole("button", { name: /delete all/i }));
 
-      expect(onClear).toHaveBeenCalledOnce();
+      expect(onDeleteAll).toHaveBeenCalledOnce();
+    });
+    it("calls onSelect with the snapshot id when clicked", async () => {
+      const onSelect = vi.fn();
+      render(
+        <SnapshotsPanel
+          {...defaultProps}
+          status="success"
+          snapshots={[snapshot]}
+          onSelect={onSelect}
+        />,
+      );
+
+      await userEvent.click(screen.getByRole("button", { name: /dataset: ds_1/i }));
+
+      expect(onSelect).toHaveBeenCalledOnce();
+      expect(onSelect).toHaveBeenCalledWith("snap_1");
+    });
+
+    it("highlights the selected snapshot", () => {
+      render(
+        <SnapshotsPanel
+          {...defaultProps}
+          status="success"
+          snapshots={[snapshot]}
+          selectedId="snap_1"
+        />,
+      );
+
+      const button = screen.getByRole("button", { name: /dataset: ds_1/i });
+      expect(button.className).toContain("border-gray-300");
     });
   });
 });

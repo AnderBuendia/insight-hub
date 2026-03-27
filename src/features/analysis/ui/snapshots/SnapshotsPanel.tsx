@@ -10,14 +10,14 @@ export function SnapshotsPanel({
   selectedId,
   onSave,
   onSelect,
-  onClear,
+  onDeleteAll,
 }: {
   status: SnapshotsState["status"];
   snapshots: AnalysisSnapshot[];
   selectedId?: AnalysisSnapshotId;
   onSave: () => void;
   onSelect: (id: AnalysisSnapshotId) => void;
-  onClear: () => void;
+  onDeleteAll: () => void;
 }) {
   const hasSnapshots = snapshots.length > 0;
   const isBusy = status === "loading" || status === "saving";
@@ -53,11 +53,11 @@ export function SnapshotsPanel({
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={onClear}
+              onClick={onDeleteAll}
               disabled={isBusy}
               className="text-xs text-gray-400 underline underline-offset-2 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Clear all
+              Delete all
             </button>
           </div>
         </>
