@@ -9,19 +9,17 @@ import { useSnapshots } from "@/features/analysis/state/useSnapshots";
 
 function AnalysisContent() {
   const searchParams = useSearchParams();
-  const urlDatasetId = searchParams.get("datasetId");
+  const datasetId = searchParams.get("datasetId");
 
   const { state: snapshotsState, actions: snapshotsActions } = useSnapshots(
-    urlDatasetId ?? "",
+    datasetId ?? "",
   );
 
   const selectedSnapshot = snapshotsState.snapshots.find(
     (snapshot) => snapshot.id === snapshotsState.selectedId,
   );
 
-  const effectiveDatasetId = selectedSnapshot?.datasetId ?? urlDatasetId;
-
-  if (!effectiveDatasetId) {
+  if (!datasetId) {
     return (
       <PageShell title="Analysis">
         <MissingDatasetState />
@@ -31,7 +29,7 @@ function AnalysisContent() {
 
   return (
     <AnalysisSuccess
-      datasetId={effectiveDatasetId}
+      datasetId={datasetId}
       snapshotsState={snapshotsState}
       snapshotsActions={snapshotsActions}
       selectedSnapshot={selectedSnapshot}

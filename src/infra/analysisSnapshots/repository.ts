@@ -2,9 +2,9 @@ import type { AnalysisSnapshot } from "@/domain";
 
 let snapshots: AnalysisSnapshot[] = [];
 
-export async function listSnapshots(): Promise<AnalysisSnapshot[]> {
+export async function listSnapshots(datasetId: string): Promise<AnalysisSnapshot[]> {
   await new Promise((resolve) => setTimeout(resolve, 150));
-  return snapshots;
+  return snapshots.filter((s) => s.datasetId === datasetId);
 }
 
 export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot> {
