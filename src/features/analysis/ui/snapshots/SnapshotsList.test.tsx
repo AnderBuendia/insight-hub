@@ -58,8 +58,8 @@ describe("SnapshotsList", () => {
       const selectedBtn = screen.getByText("Dataset: ds_beta").closest("button");
       const unselectedBtn = screen.getByText("Dataset: ds_alpha").closest("button");
 
-      expect(selectedBtn?.className).toContain("bg-gray-100");
-      expect(unselectedBtn?.className).not.toContain("bg-gray-100");
+      expect(selectedBtn?.className).toContain("border-gray-300");
+      expect(unselectedBtn?.className).not.toContain("border-gray-300");
     });
   });
 

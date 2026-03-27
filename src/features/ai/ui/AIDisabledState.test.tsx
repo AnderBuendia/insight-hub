@@ -19,6 +19,6 @@ describe("AIDisabledState", () => {
 
     // Assert
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass("rounded-xl", "border", "border-dashed", "border-gray-300", "bg-gray-50", "p-4");
+    expect(wrapper).toHaveClass("rounded-xl", "border", "border-dashed", "border-gray-600", "p-4");
   });
 });

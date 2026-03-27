@@ -53,7 +53,7 @@ describe("AIErrorState", () => {
 
     // Assert
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass("rounded-xl", "border", "border-gray-200", "bg-white", "p-3");
+    expect(wrapper).toHaveClass("rounded-xl", "border", "border-gray-700", "bg-gray-900", "p-3");
   });
 
   it("allows multiple clicks on retry button", async () => {

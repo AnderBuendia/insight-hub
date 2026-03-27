@@ -34,7 +34,7 @@ describe("LoadingState", () => {
 
       // Assert
       expect(container.querySelector(".rounded-xl")).toBeInTheDocument();
-      expect(container.querySelector(".border-gray-200")).toBeInTheDocument();
+      expect(container.querySelector(".border-gray-700")).toBeInTheDocument();
     });
   });
 

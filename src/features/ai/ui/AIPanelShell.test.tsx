@@ -43,6 +43,6 @@ describe("AIPanelShell", () => {
     // Assert
     const section = container.querySelector("section");
     expect(section).toBeInTheDocument();
-    expect(section).toHaveClass("space-y-2");
+    expect(section).toHaveClass("space-y-4");
   });
 });

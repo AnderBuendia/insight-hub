@@ -101,7 +101,7 @@ describe("MetricsList", () => {
 
       // Assert
       const kindElement = screen.getByText("percentage");
-      expect(kindElement).toHaveClass("text-xs", "text-gray-500");
+      expect(kindElement).toHaveClass("text-xs", "text-gray-400");
     });
   });
 

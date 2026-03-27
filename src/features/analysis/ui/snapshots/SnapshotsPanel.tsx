@@ -24,11 +24,11 @@ export function SnapshotsPanel({
   const isError = status === "error";
 
   return (
-    <section className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="space-y-4 rounded-xl border border-gray-700 bg-gray-800 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">Snapshots</h2>
-          <p className="text-xs text-gray-600">
+          <h2 className="text-xl font-bold text-gray-50">Snapshots</h2>
+          <p className="text-xs text-gray-300">
             Save and restore analysis contexts.
           </p>
         </div>
@@ -37,11 +37,11 @@ export function SnapshotsPanel({
       </div>
 
       {isError ? (
-        <p className="text-xs text-red-600">Something went wrong. Try again.</p>
+        <p className="text-xs text-red-400">Something went wrong. Try again.</p>
       ) : null}
 
       {isBusy ? (
-        <p className="text-xs text-gray-400 italic">Loading…</p>
+        <p className="text-xs text-gray-500 italic">Loading…</p>
       ) : hasSnapshots ? (
         <>
           <SnapshotsList
@@ -55,7 +55,7 @@ export function SnapshotsPanel({
               type="button"
               onClick={onClear}
               disabled={isBusy}
-              className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="text-xs text-gray-400 underline underline-offset-2 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Clear all
             </button>
