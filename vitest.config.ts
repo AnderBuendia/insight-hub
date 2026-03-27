@@ -20,6 +20,7 @@ export default defineConfig({
         "**/__tests__/**",
         "**/dist/**",
         "**/.next/**",
+        "src/infra/**",
       ],
       // Note: Thresholds are enforced by scripts/test-coverage.js
       // Vitest 4.x reports but doesn't fail on threshold violations by default
