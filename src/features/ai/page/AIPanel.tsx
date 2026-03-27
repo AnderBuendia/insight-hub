@@ -28,22 +28,22 @@ export function AIPanel({ datasetId = "" }: { datasetId?: string }) {
         <div className="space-y-3">
           {state.history.map((item, index) => (
             <div key={`${item.prompt}-${index}`} className="space-y-2">
-              <div className="rounded-xl border border-gray-200 bg-white p-3">
-                <p className="text-xs font-medium text-gray-500">You</p>
-                <p className="mt-1 text-sm text-gray-900">{item.prompt}</p>
+              <div className="rounded-xl border border-gray-700 bg-gray-900 p-3">
+                <p className="text-xs font-medium text-gray-400">You</p>
+                <p className="mt-1 text-sm text-gray-100">{item.prompt}</p>
               </div>
 
               <div>
-                <p className="mb-1 text-xs font-medium text-gray-500">AI</p>
+                <p className="mb-1 text-xs font-medium text-gray-400">AI</p>
                 <AIResponse response={item.response} />
               </div>
             </div>
           ))}
 
           {isLoading ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <p className="text-xs font-medium text-gray-500">AI</p>
-              <p className="mt-1 text-sm text-gray-400 italic">Thinking…</p>
+            <div className="rounded-xl border border-gray-700 bg-gray-900 p-3">
+              <p className="text-xs font-medium text-gray-400">AI</p>
+              <p className="mt-1 text-sm text-gray-500 italic">Thinking…</p>
             </div>
           ) : null}
 
@@ -52,19 +52,19 @@ export function AIPanel({ datasetId = "" }: { datasetId?: string }) {
               type="button"
               onClick={actions.clear}
               disabled={isLoading}
-              className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="text-xs text-gray-400 underline underline-offset-2 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Clear
             </button>
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-          <p className="text-sm font-medium text-gray-900">
+        <div className="rounded-xl border border-dashed border-gray-600 bg-gray-700/50 p-4">
+          <p className="text-sm font-medium text-gray-100">
             Ask a question about this dataset
           </p>
-          <p className="mt-1 text-xs text-gray-600">Try something like:</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-gray-300">Try something like:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-300">
             <li>What metric changed the most?</li>
             <li>Which segment has the highest revenue?</li>
             <li>What filters should I apply first?</li>

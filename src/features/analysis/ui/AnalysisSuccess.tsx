@@ -44,20 +44,20 @@ export function AnalysisSuccess({ datasetId }: { datasetId: string }) {
         title="Dataset Analysis"
         subtitle={`Dataset: ${state.datasetId}`}
         left={<MetricsList metrics={state.metrics} />}
-        right={
+        right={<FiltersList filters={state.filters} />}
+        bottom={
           <>
-            <FiltersList filters={state.filters} />
             <AIPanel datasetId={datasetId} />
+            <SnapshotsPanel
+              status={snapshotsState.status}
+              snapshots={snapshotsState.snapshots}
+              selectedId={snapshotsState.selectedId}
+              onSave={snapshotsActions.save}
+              onSelect={snapshotsActions.select}
+              onClear={snapshotsActions.clear}
+            />
           </>
         }
-      />
-      <SnapshotsPanel
-        status={snapshotsState.status}
-        snapshots={snapshotsState.snapshots}
-        selectedId={snapshotsState.selectedId}
-        onSave={snapshotsActions.save}
-        onSelect={snapshotsActions.select}
-        onClear={snapshotsActions.clear}
       />
     </PageShell>
   );

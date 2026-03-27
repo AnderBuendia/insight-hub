@@ -30,7 +30,7 @@ describe("AIResponse", () => {
     const { container } = render(<AIResponse response={response} />);
 
     // Assert
-    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-700");
+    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-300");
     expect(citationsHeading).not.toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe("AIResponse", () => {
     const { container } = render(<AIResponse response={response} />);
 
     // Assert
-    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-700");
+    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-300");
     expect(citationsHeading).not.toBeInTheDocument();
   });
 
@@ -62,7 +62,7 @@ describe("AIResponse", () => {
     const { container } = render(<AIResponse response={response} />);
 
     // Assert
-    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-700");
+    const citationsHeading = container.querySelector(".text-xs.font-medium.text-gray-300");
     expect(citationsHeading).toBeInTheDocument();
     expect(citationsHeading).toHaveTextContent("Citations");
     expect(screen.getByText("Source 1")).toBeInTheDocument();
@@ -99,6 +99,6 @@ describe("AIResponse", () => {
 
     // Assert
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass("rounded-xl", "border", "border-gray-200", "bg-white", "p-3");
+    expect(wrapper).toHaveClass("rounded-xl", "border", "border-gray-700", "bg-gray-900", "p-3");
   });
 });

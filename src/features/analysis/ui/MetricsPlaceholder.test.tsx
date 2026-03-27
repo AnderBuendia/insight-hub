@@ -63,7 +63,7 @@ describe("MetricsPlaceholder", () => {
       const { container } = render(<MetricsPlaceholder />);
 
       // Assert
-      const metricCards = container.querySelectorAll(".rounded-lg.bg-gray-50");
+      const metricCards = container.querySelectorAll(".rounded-lg.p-4");
       expect(metricCards).toHaveLength(2);
     });
 
