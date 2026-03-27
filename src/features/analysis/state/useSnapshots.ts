@@ -70,7 +70,7 @@ export function useSnapshots(datasetId: string) {
     }
   }, [datasetId]);
 
-  const clear = useCallback(async () => {
+  const deleteAll = useCallback(async () => {
     try {
       await AnalysisSnapshotsInfra.clearSnapshots();
 
@@ -83,7 +83,7 @@ export function useSnapshots(datasetId: string) {
         status: "error",
         snapshots: prev.snapshots,
         selectedId: prev.selectedId,
-        message: "Failed to clear snapshots",
+        message: "Failed to delete snapshots",
       }));
     }
   }, []);
@@ -95,12 +95,20 @@ export function useSnapshots(datasetId: string) {
     }));
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      selectedId: undefined,
+    }));
+  }, []);
+
   return {
     state,
     actions: {
       save,
-      clear,
+      deleteAll,
       select,
+      clearSelection,
     },
   };
 }

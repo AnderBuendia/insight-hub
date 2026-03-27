@@ -22,7 +22,8 @@ export function AnalysisSuccess({
   snapshotsActions: {
     save: () => void;
     select: (id: AnalysisSnapshotId) => void;
-    clear: () => void;
+    deleteAll: () => void;
+    clearSelection: () => void;
   };
   selectedSnapshot?: AnalysisSnapshot;
 }) {
@@ -63,15 +64,24 @@ export function AnalysisSuccess({
         bottom={
           <>
             {selectedSnapshot ? (
-              <div className="flex items-start gap-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-300">
-                <span className="mt-0.5 text-indigo-400">&#9432;</span>
-                <span>
-                  Viewing analysis restored from snapshot created at{" "}
-                  <span className="font-medium">
-                    {new Date(selectedSnapshot.createdAt).toLocaleString()}
+              <div className="flex items-start justify-between gap-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-300">
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 text-indigo-400">&#9432;</span>
+                  <span>
+                    Viewing analysis restored from snapshot created at{" "}
+                    <span className="font-medium">
+                      {new Date(selectedSnapshot.createdAt).toLocaleString()}
+                    </span>
+                    . Changes will not affect the original snapshot.
                   </span>
-                  . Changes will not affect the original snapshot.
-                </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={snapshotsActions.clearSelection}
+                  className="shrink-0 text-indigo-300 underline underline-offset-2 hover:text-indigo-100"
+                >
+                  Use current dataset
+                </button>
               </div>
             ) : null}
             <AIPanel datasetId={datasetId} />
@@ -81,7 +91,7 @@ export function AnalysisSuccess({
               selectedId={snapshotsState.selectedId}
               onSave={snapshotsActions.save}
               onSelect={snapshotsActions.select}
-              onClear={snapshotsActions.clear}
+              onDeleteAll={snapshotsActions.deleteAll}
             />
           </>
         }

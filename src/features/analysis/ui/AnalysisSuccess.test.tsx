@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisSnapshot } from "@/domain";
@@ -23,7 +24,8 @@ const defaultSnapshotsState: SnapshotsState = {
 const defaultSnapshotsActions = {
   save: vi.fn(),
   select: vi.fn(),
-  clear: vi.fn(),
+  deleteAll: vi.fn(),
+  clearSelection: vi.fn(),
 };
 
 function renderAnalysisSuccess(
@@ -150,6 +152,44 @@ describe("AnalysisSuccess", () => {
       expect(
         screen.getByText(/restored from snapshot created at/i),
       ).toBeInTheDocument();
+    });
+
+    it("shows 'Use current dataset' button in banner when selectedSnapshot is provided", () => {
+      mockUseAnalysis.mockReturnValue({
+        state: successState,
+        actions: { reload: vi.fn() },
+      });
+      const snapshot: AnalysisSnapshot = {
+        id: "snap_1",
+        datasetId: "ds_1",
+        createdAt: "2026-03-27T10:00:00.000Z",
+      };
+
+      renderAnalysisSuccess("ds_1", defaultSnapshotsState, snapshot);
+
+      expect(
+        screen.getByRole("button", { name: /use current dataset/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("calls clearSelection when 'Use current dataset' is clicked", async () => {
+      mockUseAnalysis.mockReturnValue({
+        state: successState,
+        actions: { reload: vi.fn() },
+      });
+      const snapshot: AnalysisSnapshot = {
+        id: "snap_1",
+        datasetId: "ds_1",
+        createdAt: "2026-03-27T10:00:00.000Z",
+      };
+
+      renderAnalysisSuccess("ds_1", defaultSnapshotsState, snapshot);
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /use current dataset/i }),
+      );
+
+      expect(defaultSnapshotsActions.clearSelection).toHaveBeenCalledOnce();
     });
 
     it("does not show restore banner when no selectedSnapshot", () => {
