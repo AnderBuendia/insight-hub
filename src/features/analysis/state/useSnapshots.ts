@@ -66,7 +66,7 @@ export function useSnapshots(datasetId: string) {
 
   const deleteAll = useCallback(async () => {
     try {
-      await AnalysisSnapshotsInfra.clearSnapshots();
+      await AnalysisSnapshotsInfra.clearSnapshots(datasetId);
 
       setState({
         status: "empty",
@@ -80,7 +80,7 @@ export function useSnapshots(datasetId: string) {
         message: "Failed to delete snapshots",
       }));
     }
-  }, []);
+  }, [datasetId]);
 
   const select = useCallback((snapshotId: AnalysisSnapshotId) => {
     setState((prev) => ({

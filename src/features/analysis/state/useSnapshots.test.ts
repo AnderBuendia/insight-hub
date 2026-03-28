@@ -110,7 +110,22 @@ describe("useSnapshots", () => {
   });
 
   describe("deleteAll", () => {
-    it("clears all snapshots and sets status to empty", async () => {
+    it("calls clearSnapshots with the active datasetId", async () => {
+      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+      mockClearSnapshots.mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useSnapshots("ds_1"));
+
+      await act(async () => {});
+
+      await act(async () => {
+        await result.current.actions.deleteAll();
+      });
+
+      expect(mockClearSnapshots).toHaveBeenCalledWith("ds_1");
+    });
+
+    it("clears snapshots for the active dataset and sets status to empty", async () => {
       mockListSnapshots.mockResolvedValue([mockSnapshot]);
       mockClearSnapshots.mockResolvedValue(undefined);
 

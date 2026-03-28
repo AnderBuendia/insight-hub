@@ -20,7 +20,7 @@ export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot>
   return snapshot;
 }
 
-export async function clearSnapshots(): Promise<void> {
+export async function clearSnapshots(datasetId: string): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 50));
-  snapshots = [];
+  snapshots = snapshots.filter((s) => s.datasetId !== datasetId);
 }
