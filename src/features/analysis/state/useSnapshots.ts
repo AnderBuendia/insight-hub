@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnalysisSnapshotsInfra } from "@/infra";
 import type { AnalysisSnapshotId } from "@/domain";
 import type { SnapshotsState } from "./snapshots.types";
@@ -9,47 +9,41 @@ export function useSnapshots(datasetId: string) {
     snapshots: [],
   });
 
-  const isLoadingRef = useRef(false);
-
-  const load = useCallback(async () => {
-    if (isLoadingRef.current) return;
-    isLoadingRef.current = true;
-
-    try {
-      const snapshots = await AnalysisSnapshotsInfra.listSnapshots();
-
-      if (snapshots.length === 0) {
-        setState({
-          status: "empty",
-          snapshots: [],
-        });
-        return;
-      }
-
-      setState((prev) => ({
-        status: "success",
-        snapshots,
-        selectedId: prev.selectedId,
-      }));
-    } catch {
-      setState((prev) => ({
-        status: "error",
-        snapshots: prev.snapshots,
-        selectedId: prev.selectedId,
-        message: "Failed to load snapshots",
-      }));
-    } finally {
-      isLoadingRef.current = false;
-    }
-  }, []);
-
   useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setState({ status: "loading", snapshots: [] });
+
+      try {
+        const snapshots = await AnalysisSnapshotsInfra.listSnapshots(datasetId);
+
+        if (cancelled) return;
+
+        if (snapshots.length === 0) {
+          setState({ status: "empty", snapshots: [] });
+          return;
+        }
+
+        setState({ status: "success", snapshots });
+      } catch {
+        if (cancelled) return;
+        setState((prev) => ({
+          status: "error",
+          snapshots: prev.snapshots,
+          message: "Failed to load snapshots",
+        }));
+      }
+    }
+
     void load();
-  }, [load]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [datasetId]);
 
   const save = useCallback(async () => {
-    // datasetId is passed to the repository but not yet used as a filter in listSnapshots;
-    // it is reserved for when the backend supports per-dataset snapshot scoping.
     try {
       setState((prev) => ({ ...prev, status: "saving" }));
 
@@ -72,7 +66,7 @@ export function useSnapshots(datasetId: string) {
 
   const deleteAll = useCallback(async () => {
     try {
-      await AnalysisSnapshotsInfra.clearSnapshots();
+      await AnalysisSnapshotsInfra.clearSnapshots(datasetId);
 
       setState({
         status: "empty",
@@ -86,7 +80,7 @@ export function useSnapshots(datasetId: string) {
         message: "Failed to delete snapshots",
       }));
     }
-  }, []);
+  }, [datasetId]);
 
   const select = useCallback((snapshotId: AnalysisSnapshotId) => {
     setState((prev) => ({

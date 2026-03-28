@@ -2,9 +2,9 @@ import type { AnalysisSnapshot } from "@/domain";
 
 let snapshots: AnalysisSnapshot[] = [];
 
-export async function listSnapshots(): Promise<AnalysisSnapshot[]> {
+export async function listSnapshots(datasetId: string): Promise<AnalysisSnapshot[]> {
   await new Promise((resolve) => setTimeout(resolve, 150));
-  return snapshots;
+  return snapshots.filter((s) => s.datasetId === datasetId);
 }
 
 export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot> {
@@ -20,7 +20,7 @@ export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot>
   return snapshot;
 }
 
-export async function clearSnapshots(): Promise<void> {
+export async function clearSnapshots(datasetId: string): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 50));
-  snapshots = [];
+  snapshots = snapshots.filter((s) => s.datasetId !== datasetId);
 }
