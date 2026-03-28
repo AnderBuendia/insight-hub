@@ -19,6 +19,7 @@ vi.mock("@/infra", () => ({
 import { AnalysisSnapshotsInfra } from "@/infra";
 
 const mockListSnapshots = vi.mocked(AnalysisSnapshotsInfra.listSnapshots);
+const mockSaveSnapshot = vi.mocked(AnalysisSnapshotsInfra.saveSnapshot);
 const mockClearSnapshots = vi.mocked(AnalysisSnapshotsInfra.clearSnapshots);
 
 beforeEach(() => {
@@ -160,6 +161,45 @@ describe("useSnapshots", () => {
     });
   });
 
+  describe("save", () => {
+    it("sets status to saving while the snapshot is being persisted", async () => {
+      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+
+      let resolveSave: ((value: typeof mockSnapshot) => void) | undefined;
+      mockSaveSnapshot.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveSave = resolve;
+          }),
+      );
+
+      const { result } = renderHook(() => useSnapshots("ds_1"));
+
+      await act(async () => {});
+
+      let savePromise: Promise<void> | undefined;
+      act(() => {
+        savePromise = result.current.actions.save();
+      });
+
+      expect(result.current.state.status).toBe("saving");
+      expect(mockSaveSnapshot).toHaveBeenCalledWith("ds_1");
+
+      await act(async () => {
+        resolveSave?.({
+          id: "snap_2",
+          datasetId: "ds_1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+        });
+        await savePromise;
+      });
+
+      expect(result.current.state.status).toBe("success");
+      expect(result.current.state.selectedId).toBe("snap_2");
+      expect(result.current.state.snapshots[0]?.id).toBe("snap_2");
+    });
+  });
+
   describe("dataset change", () => {
     it("reloads snapshots for the new dataset", async () => {
       const snapshotDs2 = { id: "snap_2", datasetId: "ds_2", createdAt: "2026-03-27T11:00:00.000Z" };
@@ -182,8 +222,10 @@ describe("useSnapshots", () => {
       expect(result.current.state.snapshots).toEqual([snapshotDs2]);
     });
 
-    it("clears selectedId when datasetId changes", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    it("clears selectedId when the selected snapshot does not exist in the new dataset", async () => {
+      mockListSnapshots
+        .mockResolvedValueOnce([mockSnapshot]) // ds_1 has snap_1
+        .mockResolvedValueOnce([]);            // ds_2 has no snapshots
 
       const { result, rerender } = renderHook(
         ({ datasetId }) => useSnapshots(datasetId),
@@ -199,6 +241,7 @@ describe("useSnapshots", () => {
       expect(result.current.state.selectedId).toBe("snap_1");
 
       rerender({ datasetId: "ds_2" });
+      await act(async () => {});
 
       expect(result.current.state.selectedId).toBeUndefined();
     });
