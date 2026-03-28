@@ -182,8 +182,10 @@ describe("useSnapshots", () => {
       expect(result.current.state.snapshots).toEqual([snapshotDs2]);
     });
 
-    it("clears selectedId when datasetId changes", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    it("clears selectedId when the selected snapshot does not exist in the new dataset", async () => {
+      mockListSnapshots
+        .mockResolvedValueOnce([mockSnapshot]) // ds_1 has snap_1
+        .mockResolvedValueOnce([]);            // ds_2 has no snapshots
 
       const { result, rerender } = renderHook(
         ({ datasetId }) => useSnapshots(datasetId),
@@ -199,6 +201,7 @@ describe("useSnapshots", () => {
       expect(result.current.state.selectedId).toBe("snap_1");
 
       rerender({ datasetId: "ds_2" });
+      await act(async () => {});
 
       expect(result.current.state.selectedId).toBeUndefined();
     });

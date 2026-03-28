@@ -13,8 +13,6 @@ export function useSnapshots(datasetId: string) {
     let cancelled = false;
 
     async function load() {
-      setState({ status: "loading", snapshots: [] });
-
       try {
         const snapshots = await AnalysisSnapshotsInfra.listSnapshots(datasetId);
 
@@ -25,12 +23,23 @@ export function useSnapshots(datasetId: string) {
           return;
         }
 
-        setState({ status: "success", snapshots });
+        setState((prev) => {
+          const selectedStillExists = snapshots.some(
+            (snapshot) => snapshot.id === prev.selectedId,
+          );
+
+          return {
+            status: "success",
+            snapshots,
+            selectedId: selectedStillExists ? prev.selectedId : undefined,
+          };
+        });
       } catch {
         if (cancelled) return;
         setState((prev) => ({
           status: "error",
           snapshots: prev.snapshots,
+          selectedId: prev.selectedId,
           message: "Failed to load snapshots",
         }));
       }
@@ -44,9 +53,9 @@ export function useSnapshots(datasetId: string) {
   }, [datasetId]);
 
   const save = useCallback(async () => {
-    try {
-      setState((prev) => ({ ...prev, status: "saving" }));
+    if (!datasetId) return;
 
+    try {
       const snapshot = await AnalysisSnapshotsInfra.saveSnapshot(datasetId);
 
       setState((prev) => ({
@@ -65,6 +74,8 @@ export function useSnapshots(datasetId: string) {
   }, [datasetId]);
 
   const deleteAll = useCallback(async () => {
+    if (!datasetId) return;
+
     try {
       await AnalysisSnapshotsInfra.clearSnapshots(datasetId);
 
