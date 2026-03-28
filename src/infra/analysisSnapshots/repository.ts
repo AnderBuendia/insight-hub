@@ -4,6 +4,10 @@ function getStorageKey(datasetId: string) {
   return `insighthub:snapshots:${datasetId}`;
 }
 
+function getSelectedKey(datasetId: string) {
+  return `insighthub:snapshots:selected:${datasetId}`;
+}
+
 function readSnapshots(datasetId: string): AnalysisSnapshot[] {
   if (typeof window === "undefined") return [];
 
@@ -15,6 +19,27 @@ function readSnapshots(datasetId: string): AnalysisSnapshot[] {
   } catch {
     return [];
   }
+}
+
+export function readSelectedSnapshotId(datasetId: string): string | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  return localStorage.getItem(getSelectedKey(datasetId)) ?? undefined;
+}
+
+export function persistSelectedSnapshotId(
+  datasetId: string,
+  snapshotId: string,
+) {
+  if (typeof window === "undefined") return;
+
+  localStorage.setItem(getSelectedKey(datasetId), snapshotId);
+}
+
+export function clearSelectedSnapshotId(datasetId: string) {
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem(getSelectedKey(datasetId));
 }
 
 function writeSnapshots(datasetId: string, snapshots: AnalysisSnapshot[]) {

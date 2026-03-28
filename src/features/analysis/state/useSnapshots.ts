@@ -15,24 +15,29 @@ export function useSnapshots(datasetId: string) {
     async function load() {
       try {
         const snapshots = await AnalysisSnapshotsInfra.listSnapshots(datasetId);
+        const persistedSelectedId =
+          AnalysisSnapshotsInfra.readSelectedSnapshotId(datasetId);
 
         if (cancelled) return;
 
         if (snapshots.length === 0) {
+          AnalysisSnapshotsInfra.clearSelectedSnapshotId(datasetId);
           setState({ status: "empty", snapshots: [] });
           return;
         }
 
-        setState((prev) => {
-          const selectedStillExists = snapshots.some(
-            (snapshot) => snapshot.id === prev.selectedId,
-          );
+        const selectedStillExists = persistedSelectedId
+          ? snapshots.some((snapshot) => snapshot.id === persistedSelectedId)
+          : false;
 
-          return {
-            status: "success",
-            snapshots,
-            selectedId: selectedStillExists ? prev.selectedId : undefined,
-          };
+        if (persistedSelectedId && !selectedStillExists) {
+          AnalysisSnapshotsInfra.clearSelectedSnapshotId(datasetId);
+        }
+
+        setState({
+          status: "success",
+          snapshots,
+          selectedId: selectedStillExists ? persistedSelectedId : undefined,
         });
       } catch {
         if (cancelled) return;
@@ -59,6 +64,7 @@ export function useSnapshots(datasetId: string) {
       setState((prev) => ({ ...prev, status: "saving" }));
 
       const snapshot = await AnalysisSnapshotsInfra.saveSnapshot(datasetId);
+      AnalysisSnapshotsInfra.persistSelectedSnapshotId(datasetId, snapshot.id);
 
       setState((prev) => ({
         status: "success",
@@ -80,10 +86,12 @@ export function useSnapshots(datasetId: string) {
 
     try {
       await AnalysisSnapshotsInfra.clearSnapshots(datasetId);
+      AnalysisSnapshotsInfra.clearSelectedSnapshotId(datasetId);
 
       setState({
         status: "empty",
         snapshots: [],
+        selectedId: undefined,
       });
     } catch {
       setState((prev) => ({
@@ -95,19 +103,30 @@ export function useSnapshots(datasetId: string) {
     }
   }, [datasetId]);
 
-  const select = useCallback((snapshotId: AnalysisSnapshotId) => {
-    setState((prev) => ({
-      ...prev,
-      selectedId: snapshotId,
-    }));
-  }, []);
+  const select = useCallback(
+    (snapshotId: AnalysisSnapshotId) => {
+      if (!datasetId) return;
+
+      AnalysisSnapshotsInfra.persistSelectedSnapshotId(datasetId, snapshotId);
+
+      setState((prev) => ({
+        ...prev,
+        selectedId: snapshotId,
+      }));
+    },
+    [datasetId],
+  );
 
   const clearSelection = useCallback(() => {
+    if (datasetId) {
+      AnalysisSnapshotsInfra.clearSelectedSnapshotId(datasetId);
+    }
+
     setState((prev) => ({
       ...prev,
       selectedId: undefined,
     }));
-  }, []);
+  }, [datasetId]);
 
   return {
     state,
