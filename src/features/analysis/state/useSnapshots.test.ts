@@ -19,6 +19,7 @@ vi.mock("@/infra", () => ({
 import { AnalysisSnapshotsInfra } from "@/infra";
 
 const mockListSnapshots = vi.mocked(AnalysisSnapshotsInfra.listSnapshots);
+const mockSaveSnapshot = vi.mocked(AnalysisSnapshotsInfra.saveSnapshot);
 const mockClearSnapshots = vi.mocked(AnalysisSnapshotsInfra.clearSnapshots);
 
 beforeEach(() => {
@@ -157,6 +158,45 @@ describe("useSnapshots", () => {
       expect((result.current.state as { message?: string }).message).toBe(
         "Failed to delete snapshots",
       );
+    });
+  });
+
+  describe("save", () => {
+    it("sets status to saving while the snapshot is being persisted", async () => {
+      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+
+      let resolveSave: ((value: typeof mockSnapshot) => void) | undefined;
+      mockSaveSnapshot.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveSave = resolve;
+          }),
+      );
+
+      const { result } = renderHook(() => useSnapshots("ds_1"));
+
+      await act(async () => {});
+
+      let savePromise: Promise<void> | undefined;
+      act(() => {
+        savePromise = result.current.actions.save();
+      });
+
+      expect(result.current.state.status).toBe("saving");
+      expect(mockSaveSnapshot).toHaveBeenCalledWith("ds_1");
+
+      await act(async () => {
+        resolveSave?.({
+          id: "snap_2",
+          datasetId: "ds_1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+        });
+        await savePromise;
+      });
+
+      expect(result.current.state.status).toBe("success");
+      expect(result.current.state.selectedId).toBe("snap_2");
+      expect(result.current.state.snapshots[0]?.id).toBe("snap_2");
     });
   });
 

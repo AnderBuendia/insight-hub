@@ -56,6 +56,8 @@ export function useSnapshots(datasetId: string) {
     if (!datasetId) return;
 
     try {
+      setState((prev) => ({ ...prev, status: "saving" }));
+
       const snapshot = await AnalysisSnapshotsInfra.saveSnapshot(datasetId);
 
       setState((prev) => ({
