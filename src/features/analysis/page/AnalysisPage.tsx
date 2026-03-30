@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { PageShell } from "@/shared";
 import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
 import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
+import { useAnalysis } from "@/features/analysis/state/useAnalysis";
 import { useSnapshots } from "@/features/analysis/state/useSnapshots";
 
 function AnalysisContent() {
@@ -13,6 +14,9 @@ function AnalysisContent() {
 
   const { state: snapshotsState, actions: snapshotsActions } = useSnapshots(
     datasetId ?? "",
+  );
+  const { state: analysisState, actions: analysisActions } = useAnalysis(
+    datasetId,
   );
 
   const selectedSnapshot = snapshotsState.snapshots.find(
@@ -30,8 +34,13 @@ function AnalysisContent() {
   return (
     <AnalysisSuccess
       datasetId={datasetId}
+      analysisState={analysisState}
+      analysisActions={analysisActions}
       snapshotsState={snapshotsState}
-      snapshotsActions={snapshotsActions}
+      snapshotsActions={{
+        ...snapshotsActions,
+        save: () => snapshotsActions.save(analysisState.filters),
+      }}
       selectedSnapshot={selectedSnapshot}
     />
   );
