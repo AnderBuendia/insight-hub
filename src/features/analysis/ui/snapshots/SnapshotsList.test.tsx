@@ -9,8 +9,18 @@ afterEach(() => {
 });
 
 const snapshots: AnalysisSnapshot[] = [
-  { id: "snap_1", datasetId: "ds_alpha", createdAt: "2026-01-10T08:30:00.000Z" },
-  { id: "snap_2", datasetId: "ds_beta", createdAt: "2026-03-25T14:00:00.000Z" },
+  {
+    id: "snap_1",
+    datasetId: "ds_alpha",
+    createdAt: "2026-01-10T08:30:00.000Z",
+    filters: { category: "even" },
+  },
+  {
+    id: "snap_2",
+    datasetId: "ds_beta",
+    createdAt: "2026-03-25T14:00:00.000Z",
+    filters: { category: "odd" },
+  },
 ];
 
 describe("SnapshotsList", () => {

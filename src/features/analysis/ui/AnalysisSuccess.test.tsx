@@ -1,19 +1,18 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
+import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot } from "@/domain";
 
-// Mock AIPanel to isolate AnalysisSuccess behaviour
 vi.mock("@/features/ai/page/AIPanel", () => ({
   AIPanel: () => <div data-testid="ai-panel" />,
 }));
 
-const mockUseAnalysis = vi.fn();
-vi.mock("@/features/analysis/state/useAnalysis", () => ({
-  useAnalysis: (datasetId: string) => mockUseAnalysis(datasetId),
-}));
+const defaultAnalysisActions = {
+  reload: vi.fn(),
+};
 
 const defaultSnapshotsState: SnapshotsState = {
   status: "empty",
@@ -28,14 +27,32 @@ const defaultSnapshotsActions = {
   clearSelection: vi.fn(),
 };
 
-function renderAnalysisSuccess(
-  datasetId: string,
-  snapshotsState: SnapshotsState = defaultSnapshotsState,
-  selectedSnapshot?: AnalysisSnapshot,
-) {
+const successState: AnalysisState = {
+  status: "success",
+  datasetId: "ds_1",
+  metrics: [
+    { type: "total", value: 60 },
+    { type: "count", value: 3 },
+  ],
+  filters: { category: "even" },
+};
+
+function renderAnalysisSuccess({
+  datasetId = "ds_1",
+  analysisState = successState,
+  snapshotsState = defaultSnapshotsState,
+  selectedSnapshot,
+}: {
+  datasetId?: string;
+  analysisState?: AnalysisState;
+  snapshotsState?: SnapshotsState;
+  selectedSnapshot?: AnalysisSnapshot;
+} = {}) {
   return render(
     <AnalysisSuccess
       datasetId={datasetId}
+      analysisState={analysisState}
+      analysisActions={defaultAnalysisActions}
       snapshotsState={snapshotsState}
       snapshotsActions={defaultSnapshotsActions}
       selectedSnapshot={selectedSnapshot}
@@ -52,157 +69,77 @@ describe("AnalysisSuccess", () => {
     cleanup();
   });
 
-  describe("Loading state", () => {
-    it.each(["loading", "idle"] as const)(
-      'renders loading state when status is "%s"',
-      (status) => {
-        mockUseAnalysis.mockReturnValue({
-          state: { status },
-          actions: { reload: vi.fn() },
-        });
+  it.each(["loading", "idle"] as const)(
+    'renders loading state when analysis status is "%s"',
+    (status) => {
+      renderAnalysisSuccess({
+        analysisState: {
+          status,
+          datasetId: "ds_1",
+          metrics: [],
+          filters: {},
+        },
+      });
 
-        renderAnalysisSuccess("ds_1");
+      expect(screen.getByText("Loading analysis…")).toBeInTheDocument();
+    },
+  );
 
-        expect(screen.getByText("Loading analysis…")).toBeInTheDocument();
+  it("renders an error state with retry action", () => {
+    renderAnalysisSuccess({
+      analysisState: {
+        status: "error",
+        datasetId: "ds_404",
+        metrics: [],
+        filters: {},
       },
-    );
-  });
-
-  describe("Error state", () => {
-    it("renders error message", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: { status: "error", message: "Network failure" },
-        actions: { reload: vi.fn() },
-      });
-
-      renderAnalysisSuccess("ds_1");
-
-      expect(screen.getByText("Network failure")).toBeInTheDocument();
     });
+
+    expect(
+      screen.getByText('Failed to load analysis for dataset "ds_1"'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
-  describe("Empty state", () => {
-    it("renders empty state", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: { status: "empty" },
-        actions: { reload: vi.fn() },
-      });
+  it("renders metrics, filters and snapshots when analysis is successful", () => {
+    renderAnalysisSuccess();
 
-      renderAnalysisSuccess("ds_1");
-
-      expect(screen.getByText("No analysis data available")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Dataset Analysis")).toBeInTheDocument();
+    expect(screen.getByText("Dataset: ds_1")).toBeInTheDocument();
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getByText("Category")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Snapshots" })).toBeInTheDocument();
   });
 
-  describe("Success state", () => {
-    const successState = {
-      status: "success" as const,
+  it("shows the restore banner when a snapshot is selected", () => {
+    const selectedSnapshot: AnalysisSnapshot = {
+      id: "snap_1",
       datasetId: "ds_1",
-      metrics: [{ id: "m1", datasetId: "ds_1", name: "Revenue", kind: "currency" }],
-      filters: [{ id: "f1", datasetId: "ds_1", field: "status", operator: "eq", value: "active" }],
+      createdAt: "2026-03-27T10:00:00.000Z",
+      filters: { category: "odd" },
     };
 
-    it("renders dataset analysis layout", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
+    renderAnalysisSuccess({ selectedSnapshot });
 
-      renderAnalysisSuccess("ds_1");
+    expect(
+      screen.getByText(/restored from snapshot created at/i),
+    ).toBeInTheDocument();
+  });
 
-      expect(screen.getByText("Dataset Analysis")).toBeInTheDocument();
-      expect(screen.getByText("Dataset: ds_1")).toBeInTheDocument();
-    });
+  it("clears the selection when the restore banner action is clicked", async () => {
+    const selectedSnapshot: AnalysisSnapshot = {
+      id: "snap_1",
+      datasetId: "ds_1",
+      createdAt: "2026-03-27T10:00:00.000Z",
+      filters: { category: "odd" },
+    };
 
-    it("renders snapshots panel", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
+    renderAnalysisSuccess({ selectedSnapshot });
 
-      renderAnalysisSuccess("ds_1");
+    await userEvent.click(
+      screen.getByRole("button", { name: /use current dataset/i }),
+    );
 
-      expect(screen.getByRole("heading", { name: "Snapshots" })).toBeInTheDocument();
-    });
-
-    it("passes datasetId to useAnalysis", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
-
-      renderAnalysisSuccess("ds_42");
-
-      expect(mockUseAnalysis).toHaveBeenCalledWith("ds_42");
-    });
-
-    it("shows restore banner when selectedSnapshot is provided", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
-      const snapshot: AnalysisSnapshot = {
-        id: "snap_1",
-        datasetId: "ds_1",
-        createdAt: "2026-03-27T10:00:00.000Z",
-      };
-
-      renderAnalysisSuccess("ds_1", defaultSnapshotsState, snapshot);
-
-      expect(
-        screen.getByText(/restored from snapshot created at/i),
-      ).toBeInTheDocument();
-    });
-
-    it("shows 'Use current dataset' button in banner when selectedSnapshot is provided", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
-      const snapshot: AnalysisSnapshot = {
-        id: "snap_1",
-        datasetId: "ds_1",
-        createdAt: "2026-03-27T10:00:00.000Z",
-      };
-
-      renderAnalysisSuccess("ds_1", defaultSnapshotsState, snapshot);
-
-      expect(
-        screen.getByRole("button", { name: /use current dataset/i }),
-      ).toBeInTheDocument();
-    });
-
-    it("calls clearSelection when 'Use current dataset' is clicked", async () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
-      const snapshot: AnalysisSnapshot = {
-        id: "snap_1",
-        datasetId: "ds_1",
-        createdAt: "2026-03-27T10:00:00.000Z",
-      };
-
-      renderAnalysisSuccess("ds_1", defaultSnapshotsState, snapshot);
-
-      await userEvent.click(
-        screen.getByRole("button", { name: /use current dataset/i }),
-      );
-
-      expect(defaultSnapshotsActions.clearSelection).toHaveBeenCalledOnce();
-    });
-
-    it("does not show restore banner when no selectedSnapshot", () => {
-      mockUseAnalysis.mockReturnValue({
-        state: successState,
-        actions: { reload: vi.fn() },
-      });
-
-      renderAnalysisSuccess("ds_1");
-
-      expect(
-        screen.queryByText(/restored from snapshot created at/i),
-      ).not.toBeInTheDocument();
-    });
+    expect(defaultSnapshotsActions.clearSelection).toHaveBeenCalledOnce();
   });
 });

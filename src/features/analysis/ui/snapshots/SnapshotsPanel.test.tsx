@@ -8,6 +8,7 @@ const snapshot: AnalysisSnapshot = {
   id: "snap_1",
   datasetId: "ds_1",
   createdAt: "2026-03-25T10:00:00.000Z",
+  filters: { category: "even" },
 };
 
 const defaultProps = {
