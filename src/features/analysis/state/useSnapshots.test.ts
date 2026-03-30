@@ -13,6 +13,9 @@ vi.mock("@/infra", () => ({
     listSnapshots: vi.fn(),
     saveSnapshot: vi.fn(),
     clearSnapshots: vi.fn(),
+    readSelectedSnapshotId: vi.fn(),
+    persistSelectedSnapshotId: vi.fn(),
+    clearSelectedSnapshotId: vi.fn(),
   },
 }));
 
@@ -21,9 +24,19 @@ import { AnalysisSnapshotsInfra } from "@/infra";
 const mockListSnapshots = vi.mocked(AnalysisSnapshotsInfra.listSnapshots);
 const mockSaveSnapshot = vi.mocked(AnalysisSnapshotsInfra.saveSnapshot);
 const mockClearSnapshots = vi.mocked(AnalysisSnapshotsInfra.clearSnapshots);
+const mockReadSelectedSnapshotId = vi.mocked(
+  AnalysisSnapshotsInfra.readSelectedSnapshotId,
+);
+const mockPersistSelectedSnapshotId = vi.mocked(
+  AnalysisSnapshotsInfra.persistSelectedSnapshotId,
+);
+const mockClearSelectedSnapshotId = vi.mocked(
+  AnalysisSnapshotsInfra.clearSelectedSnapshotId,
+);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockReadSelectedSnapshotId.mockReturnValue(undefined);
 });
 
 describe("useSnapshots", () => {
@@ -49,6 +62,18 @@ describe("useSnapshots", () => {
       expect(result.current.state.snapshots).toEqual([mockSnapshot]);
       expect(result.current.state.snapshots).not.toContainEqual(snapshotDs2);
     });
+
+    it("restores the persisted selected snapshot when it exists for the dataset", async () => {
+      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+      mockReadSelectedSnapshotId.mockReturnValue("snap_1");
+
+      const { result } = renderHook(() => useSnapshots("ds_1"));
+
+      await act(async () => {});
+
+      expect(mockReadSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+      expect(result.current.state.selectedId).toBe("snap_1");
+    });
   });
 
   describe("select", () => {
@@ -64,6 +89,7 @@ describe("useSnapshots", () => {
         result.current.actions.select("snap_1");
       });
 
+      expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_1");
       expect(result.current.state.selectedId).toBe("snap_1");
     });
   });
@@ -88,6 +114,7 @@ describe("useSnapshots", () => {
         result.current.actions.clearSelection();
       });
 
+      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
       expect(result.current.state.selectedId).toBeUndefined();
     });
 
@@ -124,6 +151,7 @@ describe("useSnapshots", () => {
       });
 
       expect(mockClearSnapshots).toHaveBeenCalledWith("ds_1");
+      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
     });
 
     it("clears snapshots for the active dataset and sets status to empty", async () => {
@@ -197,6 +225,7 @@ describe("useSnapshots", () => {
       expect(result.current.state.status).toBe("success");
       expect(result.current.state.selectedId).toBe("snap_2");
       expect(result.current.state.snapshots[0]?.id).toBe("snap_2");
+      expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_2");
     });
   });
 
@@ -222,10 +251,13 @@ describe("useSnapshots", () => {
       expect(result.current.state.snapshots).toEqual([snapshotDs2]);
     });
 
-    it("clears selectedId when the selected snapshot does not exist in the new dataset", async () => {
+    it("clears selectedId when the persisted selection does not exist in the new dataset", async () => {
       mockListSnapshots
         .mockResolvedValueOnce([mockSnapshot]) // ds_1 has snap_1
         .mockResolvedValueOnce([]);            // ds_2 has no snapshots
+      mockReadSelectedSnapshotId
+        .mockReturnValueOnce("snap_1")
+        .mockReturnValueOnce("snap_1");
 
       const { result, rerender } = renderHook(
         ({ datasetId }) => useSnapshots(datasetId),
@@ -234,16 +266,27 @@ describe("useSnapshots", () => {
 
       await act(async () => {});
 
-      act(() => {
-        result.current.actions.select("snap_1");
-      });
-
       expect(result.current.state.selectedId).toBe("snap_1");
 
       rerender({ datasetId: "ds_2" });
       await act(async () => {});
 
+      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_2");
       expect(result.current.state.selectedId).toBeUndefined();
+    });
+
+    it("clears a persisted selection when it no longer matches the available snapshots", async () => {
+      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+      mockReadSelectedSnapshotId.mockReturnValue("snap_missing");
+
+      const { result } = renderHook(() => useSnapshots("ds_1"));
+
+      await act(async () => {});
+
+      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+      expect(result.current.state.selectedId).toBeUndefined();
+      expect(result.current.state.snapshots).toEqual([mockSnapshot]);
+      expect(result.current.state.status).toBe("success");
     });
   });
 });
