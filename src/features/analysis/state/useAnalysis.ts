@@ -1,66 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
-import { AnalysisInfra } from "@/infra";
-import type { AnalysisState } from "./types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  applyFilters,
+  computeMetrics,
+  type AnalysisFilters,
+} from "@/domain";
+import type { AnalysisState } from "@/features/analysis/state/types";
+
+// Temporary mock data source.
+// Later we can move this to infra.
+const MOCK_DATASETS: Record<string, number[]> = {
+  ds_sales: [10, 20, 30, 40, 50],
+  ds_support: [5, 15, 25, 35, 45],
+};
 
 export function useAnalysis(datasetId: string | null) {
-  const [state, setState] = useState<AnalysisState>({ status: "idle" });
+  const [state, setState] = useState<AnalysisState>(() => ({
+    status: "idle",
+    datasetId: datasetId ?? "",
+    filters: {},
+    metrics: [],
+  }));
+  const stateRef = useRef(state);
 
-  const load = useCallback(async () => {
-    if (!datasetId) {
-      setState({ status: "idle" });
-      return;
-    }
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
-    setState({ status: "loading", datasetId });
+  const recompute = useCallback(
+    (targetDatasetId: string, filters: AnalysisFilters) => {
+      const dataset = MOCK_DATASETS[targetDatasetId];
 
-    const result = await AnalysisInfra.getAnalysis(datasetId);
+      if (!dataset) {
+        setState({
+          status: "error",
+          datasetId: targetDatasetId,
+          filters,
+          metrics: [],
+        });
+        return;
+      }
 
-    if (!result.ok) {
+      const filteredData = applyFilters(dataset, filters);
+      const metrics = computeMetrics(filteredData);
+
       setState({
-        status: "error",
-        datasetId,
-        message: result.error.message,
-        code: result.error.code,
+        status: "success",
+        datasetId: targetDatasetId,
+        filters,
+        metrics,
+      });
+    },
+    [],
+  );
+
+  const load = useCallback(() => {
+    if (!datasetId) {
+      setState({
+        status: "idle",
+        datasetId: "",
+        filters: {},
+        metrics: [],
       });
       return;
     }
 
-    const { metrics, filters } = result.data;
-
-    if (metrics.length === 0 && filters.length === 0) {
-      setState({ status: "empty", datasetId });
-      return;
-    }
+    const previousState = stateRef.current;
+    const nextFilters =
+      previousState.datasetId === datasetId ? previousState.filters : {};
 
     setState({
-      status: "success",
+      status: "loading",
       datasetId,
-      metrics,
-      filters,
+      filters: nextFilters,
+      metrics: [],
     });
-  }, [datasetId]);
+
+    recompute(datasetId, nextFilters);
+  }, [datasetId, recompute]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      try {
-        await load();
-      } catch (err) {
-        if (!cancelled) {
-          console.error("Failed to load analysis:", err); // eslint-disable-line no-console
-          // We keep state as-is; infra errors should be returned via result.ok === false.
-          // This catch is just a safety net.
-        }
-      }
-    }
-
-    void run();
-
-    return () => {
-      cancelled = true;
-    };
+    queueMicrotask(load);
   }, [load]);
 
-  return { state, actions: { reload: load } };
+  const setFilters = useCallback(
+    (filters: AnalysisFilters) => {
+      if (!datasetId) return;
+      recompute(datasetId, filters);
+    },
+    [datasetId, recompute],
+  );
+
+  const resetFilters = useCallback(() => {
+    if (!datasetId) return;
+    recompute(datasetId, {});
+  }, [datasetId, recompute]);
+
+  return {
+    state,
+    actions: {
+      reload: load,
+      setFilters,
+      resetFilters,
+    },
+  };
 }

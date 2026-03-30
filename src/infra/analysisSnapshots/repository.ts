@@ -1,4 +1,4 @@
-import type { AnalysisSnapshot } from "@/domain";
+import type { AnalysisSnapshot, AnalysisFilters } from "@/domain";
 
 function getStorageKey(datasetId: string) {
   return `insighthub:snapshots:${datasetId}`;
@@ -56,7 +56,7 @@ export async function listSnapshots(datasetId: string): Promise<AnalysisSnapshot
   return readSnapshots(datasetId);
 }
 
-export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot> {
+export async function saveSnapshot(datasetId: string, filters: AnalysisFilters): Promise<AnalysisSnapshot> {
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   const snapshots = readSnapshots(datasetId);
@@ -64,6 +64,7 @@ export async function saveSnapshot(datasetId: string): Promise<AnalysisSnapshot>
   const snapshot: AnalysisSnapshot = {
     id: crypto.randomUUID(),
     datasetId,
+    filters,
     createdAt: new Date().toISOString(),
   };
 
