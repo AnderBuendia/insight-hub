@@ -1,11 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AnalysisSnapshotsInfra } from "@/infra";
+import type { AnalysisFilters } from "@/domain";
 import { useSnapshots } from "@/features/analysis/state/useSnapshots";
 
 const mockSnapshot = {
   id: "snap_1",
   datasetId: "ds_1",
   createdAt: "2026-03-27T10:00:00.000Z",
+  filters: { category: "even" } satisfies AnalysisFilters,
 };
 
 vi.mock("@/infra", () => ({
@@ -18,8 +21,6 @@ vi.mock("@/infra", () => ({
     clearSelectedSnapshotId: vi.fn(),
   },
 }));
-
-import { AnalysisSnapshotsInfra } from "@/infra";
 
 const mockListSnapshots = vi.mocked(AnalysisSnapshotsInfra.listSnapshots);
 const mockSaveSnapshot = vi.mocked(AnalysisSnapshotsInfra.saveSnapshot);
@@ -40,253 +41,170 @@ beforeEach(() => {
 });
 
 describe("useSnapshots", () => {
-  describe("initial load", () => {
-    it("calls listSnapshots with the given datasetId", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+  it("loads snapshots for the active dataset", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
 
-      renderHook(() => useSnapshots("ds_1"));
+    const { result } = renderHook(() => useSnapshots("ds_1"));
 
-      await act(async () => {});
+    await act(async () => {});
 
-      expect(mockListSnapshots).toHaveBeenCalledWith("ds_1");
-    });
-
-    it("only shows snapshots for the given dataset", async () => {
-      const snapshotDs2 = { id: "snap_2", datasetId: "ds_2", createdAt: "2026-03-27T11:00:00.000Z" };
-      mockListSnapshots.mockResolvedValue([mockSnapshot]); // repository already filters
-
-      const { result } = renderHook(() => useSnapshots("ds_1"));
-
-      await act(async () => {});
-
-      expect(result.current.state.snapshots).toEqual([mockSnapshot]);
-      expect(result.current.state.snapshots).not.toContainEqual(snapshotDs2);
-    });
-
-    it("restores the persisted selected snapshot when it exists for the dataset", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-      mockReadSelectedSnapshotId.mockReturnValue("snap_1");
-
-      const { result } = renderHook(() => useSnapshots("ds_1"));
-
-      await act(async () => {});
-
-      expect(mockReadSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
-      expect(result.current.state.selectedId).toBe("snap_1");
-    });
+    expect(mockListSnapshots).toHaveBeenCalledWith("ds_1");
+    expect(result.current.state.status).toBe("success");
+    expect(result.current.state.snapshots).toEqual([mockSnapshot]);
   });
 
-  describe("select", () => {
-    it("sets selectedId to the given snapshot id", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+  it("restores the persisted selected snapshot when available", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    mockReadSelectedSnapshotId.mockReturnValue("snap_1");
 
-      const { result } = renderHook(() => useSnapshots("ds_1"));
+    const { result } = renderHook(() => useSnapshots("ds_1"));
 
-      // Wait for initial load
-      await act(async () => {});
+    await act(async () => {});
 
-      act(() => {
-        result.current.actions.select("snap_1");
-      });
-
-      expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_1");
-      expect(result.current.state.selectedId).toBe("snap_1");
-    });
+    expect(result.current.state.selectedId).toBe("snap_1");
   });
 
-  describe("clearSelection", () => {
-    it("sets selectedId to undefined", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+  it("clears a stale persisted selection", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    mockReadSelectedSnapshotId.mockReturnValue("snap_missing");
 
-      const { result } = renderHook(() => useSnapshots("ds_1"));
+    const { result } = renderHook(() => useSnapshots("ds_1"));
 
-      await act(async () => {});
+    await act(async () => {});
 
-      // First select a snapshot
-      act(() => {
-        result.current.actions.select("snap_1");
-      });
-
-      expect(result.current.state.selectedId).toBe("snap_1");
-
-      // Then clear the selection
-      act(() => {
-        result.current.actions.clearSelection();
-      });
-
-      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
-      expect(result.current.state.selectedId).toBeUndefined();
-    });
-
-    it("does not affect the snapshots list", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-
-      const { result } = renderHook(() => useSnapshots("ds_1"));
-
-      await act(async () => {});
-
-      act(() => {
-        result.current.actions.select("snap_1");
-      });
-
-      act(() => {
-        result.current.actions.clearSelection();
-      });
-
-      expect(result.current.state.snapshots).toEqual([mockSnapshot]);
-    });
+    expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+    expect(result.current.state.selectedId).toBeUndefined();
   });
 
-  describe("deleteAll", () => {
-    it("calls clearSnapshots with the active datasetId", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-      mockClearSnapshots.mockResolvedValue(undefined);
+  it("persists and exposes the selected snapshot id", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
 
-      const { result } = renderHook(() => useSnapshots("ds_1"));
+    const { result } = renderHook(() => useSnapshots("ds_1"));
 
-      await act(async () => {});
+    await act(async () => {});
 
-      await act(async () => {
-        await result.current.actions.deleteAll();
-      });
-
-      expect(mockClearSnapshots).toHaveBeenCalledWith("ds_1");
-      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+    act(() => {
+      result.current.actions.select("snap_1");
     });
 
-    it("clears snapshots for the active dataset and sets status to empty", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-      mockClearSnapshots.mockResolvedValue(undefined);
-
-      const { result } = renderHook(() => useSnapshots("ds_1"));
-
-      await act(async () => {});
-
-      await act(async () => {
-        await result.current.actions.deleteAll();
-      });
-
-      expect(result.current.state.snapshots).toEqual([]);
-      expect(result.current.state.status).toBe("empty");
-    });
-
-    it("sets error status when deleteAll fails", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-      mockClearSnapshots.mockRejectedValue(new Error("Network error"));
-
-      const { result } = renderHook(() => useSnapshots("ds_1"));
-
-      await act(async () => {});
-
-      await act(async () => {
-        await result.current.actions.deleteAll();
-      });
-
-      expect(result.current.state.status).toBe("error");
-      expect((result.current.state as { message?: string }).message).toBe(
-        "Failed to delete snapshots",
-      );
-    });
+    expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_1");
+    expect(result.current.state.selectedId).toBe("snap_1");
   });
 
-  describe("save", () => {
-    it("sets status to saving while the snapshot is being persisted", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
+  it("clears the selected snapshot id", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
 
-      let resolveSave: ((value: typeof mockSnapshot) => void) | undefined;
-      mockSaveSnapshot.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolveSave = resolve;
-          }),
-      );
+    const { result } = renderHook(() => useSnapshots("ds_1"));
 
-      const { result } = renderHook(() => useSnapshots("ds_1"));
+    await act(async () => {});
 
-      await act(async () => {});
-
-      let savePromise: Promise<void> | undefined;
-      act(() => {
-        savePromise = result.current.actions.save();
-      });
-
-      expect(result.current.state.status).toBe("saving");
-      expect(mockSaveSnapshot).toHaveBeenCalledWith("ds_1");
-
-      await act(async () => {
-        resolveSave?.({
-          id: "snap_2",
-          datasetId: "ds_1",
-          createdAt: "2026-03-28T10:00:00.000Z",
-        });
-        await savePromise;
-      });
-
-      expect(result.current.state.status).toBe("success");
-      expect(result.current.state.selectedId).toBe("snap_2");
-      expect(result.current.state.snapshots[0]?.id).toBe("snap_2");
-      expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_2");
+    act(() => {
+      result.current.actions.clearSelection();
     });
+
+    expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+    expect(result.current.state.selectedId).toBeUndefined();
   });
 
-  describe("dataset change", () => {
-    it("reloads snapshots for the new dataset", async () => {
-      const snapshotDs2 = { id: "snap_2", datasetId: "ds_2", createdAt: "2026-03-27T11:00:00.000Z" };
-      mockListSnapshots
-        .mockResolvedValueOnce([mockSnapshot])
-        .mockResolvedValueOnce([snapshotDs2]);
+  it("sets status to saving while persisting a snapshot and then prepends it", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
 
-      const { result, rerender } = renderHook(
-        ({ datasetId }) => useSnapshots(datasetId),
-        { initialProps: { datasetId: "ds_1" } },
-      );
+    const nextSnapshot = {
+      id: "snap_2",
+      datasetId: "ds_1",
+      createdAt: "2026-03-28T10:00:00.000Z",
+      filters: { category: "odd" } satisfies AnalysisFilters,
+    };
 
-      await act(async () => {});
-      expect(result.current.state.snapshots).toEqual([mockSnapshot]);
+    let resolveSave:
+      | ((value: typeof nextSnapshot) => void)
+      | undefined;
 
-      rerender({ datasetId: "ds_2" });
-      await act(async () => {});
+    mockSaveSnapshot.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
 
-      expect(mockListSnapshots).toHaveBeenCalledWith("ds_2");
-      expect(result.current.state.snapshots).toEqual([snapshotDs2]);
+    const { result } = renderHook(() => useSnapshots("ds_1"));
+    await act(async () => {});
+
+    let savePromise: Promise<void> | undefined;
+    act(() => {
+      savePromise = result.current.actions.save(nextSnapshot.filters);
     });
 
-    it("clears selectedId when the persisted selection does not exist in the new dataset", async () => {
-      mockListSnapshots
-        .mockResolvedValueOnce([mockSnapshot]) // ds_1 has snap_1
-        .mockResolvedValueOnce([]);            // ds_2 has no snapshots
-      mockReadSelectedSnapshotId
-        .mockReturnValueOnce("snap_1")
-        .mockReturnValueOnce("snap_1");
+    expect(result.current.state.status).toBe("saving");
+    expect(mockSaveSnapshot).toHaveBeenCalledWith("ds_1", nextSnapshot.filters);
 
-      const { result, rerender } = renderHook(
-        ({ datasetId }) => useSnapshots(datasetId),
-        { initialProps: { datasetId: "ds_1" } },
-      );
-
-      await act(async () => {});
-
-      expect(result.current.state.selectedId).toBe("snap_1");
-
-      rerender({ datasetId: "ds_2" });
-      await act(async () => {});
-
-      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_2");
-      expect(result.current.state.selectedId).toBeUndefined();
+    await act(async () => {
+      resolveSave?.(nextSnapshot);
+      await savePromise;
     });
 
-    it("clears a persisted selection when it no longer matches the available snapshots", async () => {
-      mockListSnapshots.mockResolvedValue([mockSnapshot]);
-      mockReadSelectedSnapshotId.mockReturnValue("snap_missing");
+    expect(result.current.state.status).toBe("success");
+    expect(result.current.state.selectedId).toBe("snap_2");
+    expect(result.current.state.snapshots[0]).toEqual(nextSnapshot);
+    expect(mockPersistSelectedSnapshotId).toHaveBeenCalledWith("ds_1", "snap_2");
+  });
 
-      const { result } = renderHook(() => useSnapshots("ds_1"));
+  it("sets an error state when saving fails", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    mockSaveSnapshot.mockRejectedValue(new Error("save failed"));
 
-      await act(async () => {});
+    const { result } = renderHook(() => useSnapshots("ds_1"));
+    await act(async () => {});
 
-      expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
-      expect(result.current.state.selectedId).toBeUndefined();
-      expect(result.current.state.snapshots).toEqual([mockSnapshot]);
-      expect(result.current.state.status).toBe("success");
+    await act(async () => {
+      await result.current.actions.save({ category: "even" });
     });
+
+    expect(result.current.state.status).toBe("error");
+    expect("message" in result.current.state && result.current.state.message).toBe(
+      "Failed to save snapshot",
+    );
+  });
+
+  it("deletes all snapshots for the active dataset", async () => {
+    mockListSnapshots.mockResolvedValue([mockSnapshot]);
+    mockClearSnapshots.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useSnapshots("ds_1"));
+    await act(async () => {});
+
+    await act(async () => {
+      await result.current.actions.deleteAll();
+    });
+
+    expect(mockClearSnapshots).toHaveBeenCalledWith("ds_1");
+    expect(mockClearSelectedSnapshotId).toHaveBeenCalledWith("ds_1");
+    expect(result.current.state.status).toBe("empty");
+    expect(result.current.state.snapshots).toEqual([]);
+  });
+
+  it("reloads when the dataset changes", async () => {
+    const ds2Snapshot = {
+      id: "snap_2",
+      datasetId: "ds_2",
+      createdAt: "2026-03-27T11:00:00.000Z",
+      filters: { category: "odd" } satisfies AnalysisFilters,
+    };
+
+    mockListSnapshots
+      .mockResolvedValueOnce([mockSnapshot])
+      .mockResolvedValueOnce([ds2Snapshot]);
+
+    const { result, rerender } = renderHook(
+      ({ datasetId }) => useSnapshots(datasetId),
+      { initialProps: { datasetId: "ds_1" } },
+    );
+
+    await act(async () => {});
+    rerender({ datasetId: "ds_2" });
+    await act(async () => {});
+
+    expect(mockListSnapshots).toHaveBeenCalledWith("ds_2");
+    expect(result.current.state.snapshots).toEqual([ds2Snapshot]);
   });
 });

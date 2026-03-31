@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnalysisSnapshotsInfra } from "@/infra";
-import type { AnalysisSnapshotId } from "@/domain";
+import type { AnalysisSnapshotId, AnalysisFilters } from "@/domain";
 import type { SnapshotsState } from "./snapshots.types";
 
 export function useSnapshots(datasetId: string) {
@@ -57,29 +57,39 @@ export function useSnapshots(datasetId: string) {
     };
   }, [datasetId]);
 
-  const save = useCallback(async () => {
-    if (!datasetId) return;
-
-    try {
-      setState((prev) => ({ ...prev, status: "saving" }));
-
-      const snapshot = await AnalysisSnapshotsInfra.saveSnapshot(datasetId);
-      AnalysisSnapshotsInfra.persistSelectedSnapshotId(datasetId, snapshot.id);
+  const save = useCallback(
+    async (filters: AnalysisFilters) => {
+      if (!datasetId) return;
 
       setState((prev) => ({
-        status: "success",
-        snapshots: [snapshot, ...prev.snapshots],
-        selectedId: snapshot.id,
-      }));
-    } catch {
-      setState((prev) => ({
-        status: "error",
+        status: "saving",
         snapshots: prev.snapshots,
         selectedId: prev.selectedId,
-        message: "Failed to save snapshot",
       }));
-    }
-  }, [datasetId]);
+
+      try {
+        const snapshot = await AnalysisSnapshotsInfra.saveSnapshot(
+          datasetId,
+          filters,
+        );
+        AnalysisSnapshotsInfra.persistSelectedSnapshotId(datasetId, snapshot.id);
+
+        setState((prev) => ({
+          status: "success",
+          snapshots: [snapshot, ...prev.snapshots],
+          selectedId: snapshot.id,
+        }));
+      } catch {
+        setState((prev) => ({
+          status: "error",
+          snapshots: prev.snapshots,
+          selectedId: prev.selectedId,
+          message: "Failed to save snapshot",
+        }));
+      }
+    },
+    [datasetId],
+  );
 
   const deleteAll = useCallback(async () => {
     if (!datasetId) return;

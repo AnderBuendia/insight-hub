@@ -1,23 +1,28 @@
-import { useAnalysis } from "@/features/analysis/state/useAnalysis";
 import { AnalysisLayout } from "@/features/analysis/ui/AnalysisLayout";
 import { AIPanel } from "@/features/ai/page/AIPanel";
 import { PageShell } from "@/shared";
 import { LoadingState } from "@/features/analysis/ui/LoadingState";
 import { ErrorState } from "@/features/analysis/ui/ErrorState";
-import { EmptyState } from "@/features/analysis/ui/EmptyState";
 import { MetricsList } from "@/features/analysis/ui/MetricsList";
 import { FiltersList } from "@/features/analysis/ui/FiltersList";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
+import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot, AnalysisSnapshotId } from "@/domain";
 
 export function AnalysisSuccess({
   datasetId,
+  analysisState,
+  analysisActions,
   snapshotsState,
   snapshotsActions,
   selectedSnapshot,
 }: {
   datasetId: string;
+  analysisState: AnalysisState;
+  analysisActions: {
+    reload: () => void;
+  };
   snapshotsState: SnapshotsState;
   snapshotsActions: {
     save: () => void;
@@ -27,10 +32,9 @@ export function AnalysisSuccess({
   };
   selectedSnapshot?: AnalysisSnapshot;
 }) {
-  const { state, actions } = useAnalysis(datasetId);
   const restoredFromSnapshot = Boolean(selectedSnapshot);
 
-  if (state.status === "loading" || state.status === "idle") {
+  if (analysisState.status === "loading" || analysisState.status === "idle") {
     return (
       <PageShell title="Analysis">
         <LoadingState title="Loading analysis…" />
@@ -38,18 +42,13 @@ export function AnalysisSuccess({
     );
   }
 
-  if (state.status === "error") {
+  if (analysisState.status === "error") {
     return (
       <PageShell title="Analysis">
-        <ErrorState message={state.message} onRetry={actions.reload} />
-      </PageShell>
-    );
-  }
-
-  if (state.status === "empty") {
-    return (
-      <PageShell title="Analysis">
-        <EmptyState onReload={actions.reload} />
+        <ErrorState
+          message={`Failed to load analysis for dataset "${datasetId}"`}
+          onRetry={analysisActions.reload}
+        />
       </PageShell>
     );
   }
@@ -58,9 +57,9 @@ export function AnalysisSuccess({
     <PageShell title="Analysis">
       <AnalysisLayout
         title="Dataset Analysis"
-        subtitle={`Dataset: ${state.datasetId} ${restoredFromSnapshot ? " • restored from snapshot" : ""}` }
-        left={<MetricsList metrics={state.metrics} />}
-        right={<FiltersList filters={state.filters} />}
+        subtitle={`Dataset: ${analysisState.datasetId}${restoredFromSnapshot ? " • restored from snapshot" : ""}`}
+        left={<MetricsList metrics={analysisState.metrics} />}
+        right={<FiltersList filters={analysisState.filters} />}
         bottom={
           <>
             {selectedSnapshot ? (
