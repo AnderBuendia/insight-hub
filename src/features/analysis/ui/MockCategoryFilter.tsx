@@ -19,7 +19,8 @@ export function MockCategoryFilter({
   const current = (filters.category as Category) ?? "all";
 
   function handleSelect(value: Category) {
-    onSetFilters(value === "all" ? {} : { category: value });
+    const { category: _removed, ...rest } = filters;
+    onSetFilters(value === "all" ? rest : { ...rest, category: value });
   }
 
   return (
