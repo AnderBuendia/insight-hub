@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageShell } from "@/shared";
 import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
@@ -23,6 +23,13 @@ function AnalysisContent() {
     (snapshot) => snapshot.id === snapshotsState.selectedId,
   );
 
+  useEffect(() => {
+    if (!selectedSnapshot) return;
+
+    analysisActions.setFilters(selectedSnapshot.filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshotsState.selectedId]);
+
   if (!datasetId) {
     return (
       <PageShell title="Analysis">
@@ -35,7 +42,10 @@ function AnalysisContent() {
     <AnalysisSuccess
       datasetId={datasetId}
       analysisState={analysisState}
-      analysisActions={analysisActions}
+      analysisActions={{
+        reload: analysisActions.reload,
+        setFilters: analysisActions.setFilters,
+      }}
       snapshotsState={snapshotsState}
       snapshotsActions={{
         ...snapshotsActions,
