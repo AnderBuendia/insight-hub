@@ -5,10 +5,11 @@ import { LoadingState } from "@/features/analysis/ui/LoadingState";
 import { ErrorState } from "@/features/analysis/ui/ErrorState";
 import { MetricsList } from "@/features/analysis/ui/MetricsList";
 import { FiltersList } from "@/features/analysis/ui/FiltersList";
+import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisState } from "@/features/analysis/state/types";
-import type { AnalysisSnapshot, AnalysisSnapshotId } from "@/domain";
+import type { AnalysisSnapshot, AnalysisSnapshotId, AnalysisFilters } from "@/domain";
 
 export function AnalysisSuccess({
   datasetId,
@@ -22,6 +23,7 @@ export function AnalysisSuccess({
   analysisState: AnalysisState;
   analysisActions: {
     reload: () => void;
+    setFilters: (filters: AnalysisFilters) => void;
   };
   snapshotsState: SnapshotsState;
   snapshotsActions: {
@@ -59,7 +61,15 @@ export function AnalysisSuccess({
         title="Dataset Analysis"
         subtitle={`Dataset: ${analysisState.datasetId}${restoredFromSnapshot ? " • restored from snapshot" : ""}`}
         left={<MetricsList metrics={analysisState.metrics} />}
-        right={<FiltersList filters={analysisState.filters} />}
+        right={
+          <div className="space-y-4">
+            <MockCategoryFilter
+              filters={analysisState.filters}
+              onSetFilters={analysisActions.setFilters}
+            />
+            <FiltersList filters={analysisState.filters} />
+          </div>
+        }
         bottom={
           <>
             {selectedSnapshot ? (

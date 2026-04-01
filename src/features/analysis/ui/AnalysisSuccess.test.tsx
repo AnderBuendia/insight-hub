@@ -12,6 +12,7 @@ vi.mock("@/features/ai/page/AIPanel", () => ({
 
 const defaultAnalysisActions = {
   reload: vi.fn(),
+  setFilters: vi.fn(),
 };
 
 const defaultSnapshotsState: SnapshotsState = {
@@ -107,7 +108,7 @@ describe("AnalysisSuccess", () => {
     expect(screen.getByText("Dataset Analysis")).toBeInTheDocument();
     expect(screen.getByText("Dataset: ds_1")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getByText("Category")).toBeInTheDocument();
+    expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Snapshots" })).toBeInTheDocument();
   });
 
