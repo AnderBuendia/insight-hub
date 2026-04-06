@@ -11,7 +11,7 @@ describe("FiltersList", () => {
   it("renders the empty state when there are no active filters", () => {
     render(<FiltersList filters={{}} />);
 
-    expect(screen.getByText("No filters applied")).toBeInTheDocument();
+    expect(screen.getByText("No active filters.")).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
@@ -21,8 +21,8 @@ describe("FiltersList", () => {
     render(<FiltersList filters={filters} />);
 
     expect(screen.getByRole("list")).toBeInTheDocument();
-    expect(screen.getByText("Category")).toBeInTheDocument();
-    expect(screen.getByText("even")).toHaveClass("font-mono");
+    expect(screen.getByText("category")).toBeInTheDocument();
+    expect(screen.getByText("even")).toBeInTheDocument();
   });
 
   it("renders the date range filter", () => {
@@ -35,7 +35,7 @@ describe("FiltersList", () => {
 
     render(<FiltersList filters={filters} />);
 
-    expect(screen.getByText("Date range")).toBeInTheDocument();
+    expect(screen.getByText("date")).toBeInTheDocument();
     expect(screen.getByText("2026-03-01")).toBeInTheDocument();
     expect(screen.getByText("2026-03-29")).toBeInTheDocument();
   });

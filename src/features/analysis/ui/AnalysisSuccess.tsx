@@ -34,8 +34,6 @@ export function AnalysisSuccess({
   };
   selectedSnapshot?: AnalysisSnapshot;
 }) {
-  const restoredFromSnapshot = Boolean(selectedSnapshot);
-
   if (analysisState.status === "loading" || analysisState.status === "idle") {
     return (
       <PageShell title="Analysis">
@@ -59,7 +57,7 @@ export function AnalysisSuccess({
     <PageShell title="Analysis">
       <AnalysisLayout
         title="Dataset Analysis"
-        subtitle={`Dataset: ${analysisState.datasetId}${restoredFromSnapshot ? " • restored from snapshot" : ""}`}
+        subtitle={`Dataset: ${analysisState.datasetId}`}
         left={<MetricsList metrics={analysisState.metrics} />}
         right={
           <div className="space-y-4">
@@ -77,19 +75,19 @@ export function AnalysisSuccess({
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 text-indigo-400">&#9432;</span>
                   <span>
-                    Viewing analysis restored from snapshot created at{" "}
+                    Filters restored from snapshot saved on{" "}
                     <span className="font-medium">
                       {new Date(selectedSnapshot.createdAt).toLocaleString()}
                     </span>
-                    . Changes will not affect the original snapshot.
+                    . Editing filters or saving a new snapshot will not modify the original.
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={snapshotsActions.clearSelection}
-                  className="shrink-0 text-indigo-300 underline underline-offset-2 hover:text-indigo-100"
+                  className="shrink-0 whitespace-nowrap text-indigo-300 underline underline-offset-2 transition-colors hover:text-indigo-100"
                 >
-                  Use current dataset
+                  Exit snapshot view
                 </button>
               </div>
             ) : null}

@@ -123,7 +123,7 @@ describe("AnalysisSuccess", () => {
     renderAnalysisSuccess({ selectedSnapshot });
 
     expect(
-      screen.getByText(/restored from snapshot created at/i),
+      screen.getByText(/restored from snapshot saved on/i),
     ).toBeInTheDocument();
   });
 
@@ -138,7 +138,7 @@ describe("AnalysisSuccess", () => {
     renderAnalysisSuccess({ selectedSnapshot });
 
     await userEvent.click(
-      screen.getByRole("button", { name: /use current dataset/i }),
+      screen.getByRole("button", { name: /exit snapshot view/i }),
     );
 
     expect(defaultSnapshotsActions.clearSelection).toHaveBeenCalledOnce();
