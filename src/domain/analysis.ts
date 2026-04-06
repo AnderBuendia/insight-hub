@@ -20,7 +20,7 @@ export type AnalysisState = {
 
 export function applyFilters(
   dataset: number[],
-  filters: AnalysisFilters,
+  filters: AnalysisFilters = {},
 ): number[] {
   // mock simple
   if (!filters.category) return dataset;
