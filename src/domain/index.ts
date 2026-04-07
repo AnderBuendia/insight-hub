@@ -7,3 +7,5 @@ export type {
   Metric,
 } from "./analysis";
 export { applyFilters, computeMetrics } from "./analysis";
+export type { Insight } from "./insights";
+export { deriveInsights } from "./insights";
