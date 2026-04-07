@@ -7,6 +7,7 @@ import { MetricsList } from "@/features/analysis/ui/MetricsList";
 import { FiltersList } from "@/features/analysis/ui/FiltersList";
 import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
+import { InsightsPanel } from "@/features/analysis/ui/InsightsPanel";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot, AnalysisSnapshotId, AnalysisFilters } from "@/domain";
@@ -92,6 +93,7 @@ export function AnalysisSuccess({
               </div>
             ) : null}
             <AIPanel datasetId={datasetId} />
+            <InsightsPanel insights={analysisState.insights} />
             <SnapshotsPanel
               status={snapshotsState.status}
               snapshots={snapshotsState.snapshots}
