@@ -36,6 +36,7 @@ const successState: AnalysisState = {
     { type: "count", value: 3 },
   ],
   filters: { category: "even" },
+  insights: [],
 };
 
 function renderAnalysisSuccess({
@@ -79,6 +80,7 @@ describe("AnalysisSuccess", () => {
           datasetId: "ds_1",
           metrics: [],
           filters: {},
+          insights: [],
         },
       });
 
@@ -93,6 +95,7 @@ describe("AnalysisSuccess", () => {
         datasetId: "ds_404",
         metrics: [],
         filters: {},
+        insights: [],
       },
     });
 

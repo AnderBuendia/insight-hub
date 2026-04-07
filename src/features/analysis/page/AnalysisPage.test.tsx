@@ -31,6 +31,7 @@ describe("AnalysisPage", () => {
         datasetId: "ds_123",
         metrics: [{ type: "total", value: 60 }],
         filters: { category: "even" },
+        insights: [],
       },
       actions: {
         reload: vi.fn(),

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   applyFilters,
   computeMetrics,
+  deriveInsights,
   type AnalysisFilters,
 } from "@/domain";
 import type { AnalysisState } from "@/features/analysis/state/types";
@@ -19,6 +20,7 @@ export function useAnalysis(datasetId: string | null) {
     datasetId: datasetId ?? "",
     filters: {},
     metrics: [],
+    insights: [],
   }));
   const stateRef = useRef(state);
 
@@ -36,18 +38,21 @@ export function useAnalysis(datasetId: string | null) {
           datasetId: targetDatasetId,
           filters,
           metrics: [],
+          insights: [],
         });
         return;
       }
 
       const filteredData = applyFilters(dataset, filters);
       const metrics = computeMetrics(filteredData);
+      const insights = deriveInsights(metrics);
 
       setState({
         status: "success",
         datasetId: targetDatasetId,
         filters,
         metrics,
+        insights,
       });
     },
     [],
@@ -60,6 +65,7 @@ export function useAnalysis(datasetId: string | null) {
         datasetId: "",
         filters: {},
         metrics: [],
+        insights: [],
       });
       return;
     }
@@ -73,6 +79,7 @@ export function useAnalysis(datasetId: string | null) {
       datasetId,
       filters: nextFilters,
       metrics: [],
+      insights: [],
     });
 
     recompute(datasetId, nextFilters);
