@@ -16,7 +16,7 @@ function getFilterContext(filters: AnalysisFilters): string {
 
 export function deriveInsights(
   metrics: Metric[],
-  filters: AnalysisFilters,
+  filters: AnalysisFilters = {},
 ): Insight[] {
   const insights: Insight[] = [];
 
