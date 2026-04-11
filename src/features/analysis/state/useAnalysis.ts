@@ -14,15 +14,21 @@ const MOCK_DATASETS: Record<string, number[]> = {
   ds_support: [5, 15, 25, 35, 45],
 };
 
-export function useAnalysis(datasetId: string | null) {
+export function useAnalysis(
+  datasetId: string | null,
+  initialFilters: AnalysisFilters = {},
+) {
   const [state, setState] = useState<AnalysisState>(() => ({
     status: "idle",
     datasetId: datasetId ?? "",
-    filters: {},
+    filters: initialFilters,
     metrics: [],
     insights: [],
   }));
   const stateRef = useRef(state);
+  // Captured once at mount so load() can restore URL-driven filters when
+  // the user navigates to a different dataset without touching the ref.
+  const initialFiltersRef = useRef(initialFilters);
 
   useEffect(() => {
     stateRef.current = state;
@@ -72,7 +78,9 @@ export function useAnalysis(datasetId: string | null) {
 
     const previousState = stateRef.current;
     const nextFilters =
-      previousState.datasetId === datasetId ? previousState.filters : {};
+      previousState.datasetId === datasetId
+        ? previousState.filters
+        : initialFiltersRef.current;
 
     setState({
       status: "loading",
