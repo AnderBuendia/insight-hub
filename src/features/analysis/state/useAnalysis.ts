@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   applyFilters,
   computeMetrics,
@@ -14,15 +14,26 @@ const MOCK_DATASETS: Record<string, number[]> = {
   ds_support: [5, 15, 25, 35, 45],
 };
 
-export function useAnalysis(datasetId: string | null) {
+export function useAnalysis(
+  datasetId: string | null,
+  initialFilters: AnalysisFilters = {},
+) {
   const [state, setState] = useState<AnalysisState>(() => ({
     status: "idle",
     datasetId: datasetId ?? "",
-    filters: {},
+    filters: initialFilters,
     metrics: [],
     insights: [],
   }));
   const stateRef = useRef(state);
+  // Latest-ref pattern: kept current via useLayoutEffect (runs before
+  // useEffect) so that load(), queued via queueMicrotask inside useEffect,
+  // always reads the filters that correspond to the current URL when
+  // datasetId changes.
+  const initialFiltersRef = useRef(initialFilters);
+  useLayoutEffect(() => {
+    initialFiltersRef.current = initialFilters;
+  });
 
   useEffect(() => {
     stateRef.current = state;
@@ -72,7 +83,9 @@ export function useAnalysis(datasetId: string | null) {
 
     const previousState = stateRef.current;
     const nextFilters =
-      previousState.datasetId === datasetId ? previousState.filters : {};
+      previousState.datasetId === datasetId
+        ? previousState.filters
+        : initialFiltersRef.current;
 
     setState({
       status: "loading",

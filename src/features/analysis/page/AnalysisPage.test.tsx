@@ -3,15 +3,18 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { AnalysisPage } from "@/features/analysis/page/AnalysisPage";
 
 const mockUseSearchParams = vi.fn();
+const mockUseRouter = vi.fn();
 const mockUseAnalysis = vi.fn();
 const mockUseSnapshots = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => mockUseSearchParams(),
+  useRouter: () => mockUseRouter(),
 }));
 
 vi.mock("@/features/analysis/state/useAnalysis", () => ({
-  useAnalysis: (datasetId: string | null) => mockUseAnalysis(datasetId),
+  useAnalysis: (datasetId: string | null, initialFilters: unknown) =>
+    mockUseAnalysis(datasetId, initialFilters),
 }));
 
 vi.mock("@/features/analysis/state/useSnapshots", () => ({
@@ -25,6 +28,7 @@ vi.mock("@/features/ai/page/AIPanel", () => ({
 describe("AnalysisPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseRouter.mockReturnValue({ replace: vi.fn() });
     mockUseAnalysis.mockReturnValue({
       state: {
         status: "success",
@@ -71,7 +75,7 @@ describe("AnalysisPage", () => {
 
     render(<AnalysisPage />);
 
-    expect(mockUseAnalysis).toHaveBeenCalledWith("ds_123");
+    expect(mockUseAnalysis).toHaveBeenCalledWith("ds_123", {});
     expect(mockUseSnapshots).toHaveBeenCalledWith("ds_123");
   });
 
