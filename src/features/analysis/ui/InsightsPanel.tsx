@@ -23,9 +23,14 @@ export function InsightsPanel({ insights }: { insights: Insight[] }) {
 
   return (
     <section className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-        Insights
-      </p>
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+          Insights
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Interpreted signals based on the current analysis state.
+        </p>
+      </div>
 
       <ul className="space-y-2">
         {insights.map((insight) => (
@@ -33,6 +38,9 @@ export function InsightsPanel({ insights }: { insights: Insight[] }) {
             key={insight.id}
             className={`rounded-lg border p-3 ${getSeverityClasses(insight.severity)}`}
           >
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+              {insight.severity}
+            </p>
             <p className="text-sm text-gray-100">{insight.message}</p>
           </li>
         ))}
