@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   applyFilters,
   computeMetrics,
@@ -26,9 +26,14 @@ export function useAnalysis(
     insights: [],
   }));
   const stateRef = useRef(state);
-  // Captured once at mount so load() can restore URL-driven filters when
-  // the user navigates to a different dataset without touching the ref.
+  // Latest-ref pattern: kept current via useLayoutEffect (runs before
+  // useEffect) so that load(), queued via queueMicrotask inside useEffect,
+  // always reads the filters that correspond to the current URL when
+  // datasetId changes.
   const initialFiltersRef = useRef(initialFilters);
+  useLayoutEffect(() => {
+    initialFiltersRef.current = initialFilters;
+  });
 
   useEffect(() => {
     stateRef.current = state;
