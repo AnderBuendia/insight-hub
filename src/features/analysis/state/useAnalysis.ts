@@ -45,7 +45,7 @@ export function useAnalysis(datasetId: string | null) {
 
       const filteredData = applyFilters(dataset, filters);
       const metrics = computeMetrics(filteredData);
-      const insights = deriveInsights(metrics);
+      const insights = deriveInsights(metrics, filters);
 
       setState({
         status: "success",
