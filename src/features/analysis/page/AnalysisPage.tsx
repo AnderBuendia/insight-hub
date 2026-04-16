@@ -1,17 +1,25 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import type { AnalysisFilters } from "@/domain";
+import { useUrlFilters } from "@/features/analysis/state/useUrlFilters";
+import { parseFiltersFromSearchParams } from "@/features/analysis/state/urlState";
 import { PageShell } from "@/shared";
-import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
-import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
 import { useAnalysis } from "@/features/analysis/state/useAnalysis";
 import { useSnapshots } from "@/features/analysis/state/useSnapshots";
-import { parseFiltersFromSearchParams } from "@/features/analysis/state/urlState";
-import { useUrlFilters } from "@/features/analysis/state/useUrlFilters";
+import { useCopyToClipboard } from "@/features/analysis/state/useCopyToClipboard";
+import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
+import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
 
 function AnalysisContent() {
   const { datasetId, initialFilters, searchParams, syncUrl } = useUrlFilters();
+  const { copied, copy } = useCopyToClipboard();
+  const handleCopyLink = () => copy(window.location.href);
 
   const {
     state: snapshotsState,
@@ -78,6 +86,7 @@ function AnalysisContent() {
         save: () => snapshotsActions.save(analysisState.filters),
       }}
       selectedSnapshot={selectedSnapshot}
+      shareActions={{ onCopy: handleCopyLink, copied }}
     />
   );
 }
