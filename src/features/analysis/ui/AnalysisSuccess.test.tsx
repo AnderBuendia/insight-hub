@@ -28,6 +28,11 @@ const defaultSnapshotsActions = {
   clearSelection: vi.fn(),
 };
 
+const defaultShareActions = {
+  onCopy: vi.fn(),
+  copied: false,
+};
+
 const successState: AnalysisState = {
   status: "success",
   datasetId: "ds_1",
@@ -44,11 +49,13 @@ function renderAnalysisSuccess({
   analysisState = successState,
   snapshotsState = defaultSnapshotsState,
   selectedSnapshot,
+  shareActions = defaultShareActions,
 }: {
   datasetId?: string;
   analysisState?: AnalysisState;
   snapshotsState?: SnapshotsState;
   selectedSnapshot?: AnalysisSnapshot;
+  shareActions?: { onCopy: () => void; copied: boolean };
 } = {}) {
   return render(
     <AnalysisSuccess
@@ -58,6 +65,7 @@ function renderAnalysisSuccess({
       snapshotsState={snapshotsState}
       snapshotsActions={defaultSnapshotsActions}
       selectedSnapshot={selectedSnapshot}
+      shareActions={shareActions}
     />,
   );
 }

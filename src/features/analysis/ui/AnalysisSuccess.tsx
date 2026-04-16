@@ -8,6 +8,7 @@ import { FiltersList } from "@/features/analysis/ui/FiltersList";
 import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
 import { InsightsPanel } from "@/features/analysis/ui/InsightsPanel";
+import { ShareAnalysisButton } from "@/features/analysis/ui/ShareAnalysisButton";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot, AnalysisSnapshotId, AnalysisFilters } from "@/domain";
@@ -19,6 +20,7 @@ export function AnalysisSuccess({
   snapshotsState,
   snapshotsActions,
   selectedSnapshot,
+  shareActions,
 }: {
   datasetId: string;
   analysisState: AnalysisState;
@@ -34,6 +36,10 @@ export function AnalysisSuccess({
     clearSelection: () => void;
   };
   selectedSnapshot?: AnalysisSnapshot;
+  shareActions: {
+    onCopy: () => void;
+    copied: boolean;
+  };
 }) {
   if (analysisState.status === "loading" || analysisState.status === "idle") {
     return (
@@ -93,6 +99,7 @@ export function AnalysisSuccess({
               </div>
             ) : null}
             <AIPanel datasetId={datasetId} />
+            <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
             <InsightsPanel insights={analysisState.insights} />
             <SnapshotsPanel
               status={snapshotsState.status}
