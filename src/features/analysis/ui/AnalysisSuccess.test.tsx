@@ -50,12 +50,14 @@ function renderAnalysisSuccess({
   snapshotsState = defaultSnapshotsState,
   selectedSnapshot,
   shareActions = defaultShareActions,
+  exportActions,
 }: {
   datasetId?: string;
   analysisState?: AnalysisState;
   snapshotsState?: SnapshotsState;
   selectedSnapshot?: AnalysisSnapshot;
   shareActions?: { onCopy: () => void; copied: boolean };
+  exportActions?: { onExport: () => void; exported?: boolean };
 } = {}) {
   return render(
     <AnalysisSuccess
@@ -66,6 +68,7 @@ function renderAnalysisSuccess({
       snapshotsActions={defaultSnapshotsActions}
       selectedSnapshot={selectedSnapshot}
       shareActions={shareActions}
+      exportActions={{ onExport: vi.fn(), exported: false, ...exportActions }}
     />,
   );
 }
