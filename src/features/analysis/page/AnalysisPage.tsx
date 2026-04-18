@@ -15,6 +15,7 @@ import { useSnapshots } from "@/features/analysis/state/useSnapshots";
 import { useCopyToClipboard } from "@/features/analysis/state/useCopyToClipboard";
 import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
 import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
+import { useExportAnalysis } from "@/features/analysis/state/useExportAnalysis";
 
 function AnalysisContent() {
   const { datasetId, initialFilters, searchParams, syncUrl } = useUrlFilters();
@@ -30,6 +31,8 @@ function AnalysisContent() {
     state: analysisState,
     actions: { reload, setFilters },
   } = useAnalysis(datasetId, initialFilters);
+
+  const { exportJson, exported } = useExportAnalysis(analysisState);
 
   const handleSetFilters = useCallback(
     (filters: AnalysisFilters) => {
@@ -87,6 +90,7 @@ function AnalysisContent() {
       }}
       selectedSnapshot={selectedSnapshot}
       shareActions={{ onCopy: handleCopyLink, copied }}
+      exportActions={{ onExport: exportJson, exported }}
     />
   );
 }

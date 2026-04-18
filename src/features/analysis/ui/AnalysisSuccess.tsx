@@ -9,6 +9,7 @@ import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
 import { InsightsPanel } from "@/features/analysis/ui/InsightsPanel";
 import { ShareAnalysisButton } from "@/features/analysis/ui/ShareAnalysisButton";
+import { ExportAnalysisButton } from "@/features/analysis/ui/ExportAnalysisButton";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot, AnalysisSnapshotId, AnalysisFilters } from "@/domain";
@@ -21,6 +22,7 @@ export function AnalysisSuccess({
   snapshotsActions,
   selectedSnapshot,
   shareActions,
+  exportActions,
 }: {
   datasetId: string;
   analysisState: AnalysisState;
@@ -39,6 +41,10 @@ export function AnalysisSuccess({
   shareActions: {
     onCopy: () => void;
     copied: boolean;
+  };
+  exportActions: {
+    onExport: () => void;
+    exported: boolean;
   };
 }) {
   if (analysisState.status === "loading" || analysisState.status === "idle") {
@@ -100,6 +106,7 @@ export function AnalysisSuccess({
             ) : null}
             <AIPanel datasetId={datasetId} />
             <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
+            <ExportAnalysisButton onExport={exportActions.onExport} exported={exportActions.exported} />
             <InsightsPanel insights={analysisState.insights} />
             <SnapshotsPanel
               status={snapshotsState.status}
