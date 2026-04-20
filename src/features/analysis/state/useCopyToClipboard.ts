@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react";
+import { useTemporaryFlag } from "@/shared/hooks/useTemporaryFlag";
 
 export function useCopyToClipboard(resetMs = 2000) {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-
-    const id = window.setTimeout(() => setCopied(false), resetMs);
-    return () => window.clearTimeout(id);
-  }, [copied, resetMs]);
+  const { active: copied, trigger: setCopied, reset: clearCopied } = useTemporaryFlag(resetMs);
 
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
+      setCopied();
     } catch {
-      setCopied(false);
+      clearCopied();
     }
   }
 
