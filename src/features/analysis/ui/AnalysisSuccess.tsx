@@ -9,7 +9,8 @@ import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
 import { SnapshotsPanel } from "@/features/analysis/ui/snapshots/SnapshotsPanel";
 import { InsightsPanel } from "@/features/analysis/ui/InsightsPanel";
 import { ShareAnalysisButton } from "@/features/analysis/ui/ShareAnalysisButton";
-import { ExportAnalysisButton } from "@/features/analysis/ui/ExportAnalysisButton";
+import { ExportAnalysisButton } from "@/features/analysis/ui/export/ExportAnalysisButton";
+import { ExportMetricsCsvButton } from "@/features/analysis/ui/export/ExportMetricsCsvButton";
 import type { SnapshotsState } from "@/features/analysis/state/snapshots.types";
 import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot, AnalysisSnapshotId, AnalysisFilters } from "@/domain";
@@ -23,6 +24,7 @@ export function AnalysisSuccess({
   selectedSnapshot,
   shareActions,
   exportActions,
+  csvExportActions,
 }: {
   datasetId: string;
   analysisState: AnalysisState;
@@ -43,6 +45,10 @@ export function AnalysisSuccess({
     copied: boolean;
   };
   exportActions: {
+    onExport: () => void;
+    exported: boolean;
+  };
+  csvExportActions: {
     onExport: () => void;
     exported: boolean;
   };
@@ -107,6 +113,7 @@ export function AnalysisSuccess({
             <AIPanel datasetId={datasetId} />
             <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
             <ExportAnalysisButton onExport={exportActions.onExport} exported={exportActions.exported} />
+            <ExportMetricsCsvButton onExport={csvExportActions.onExport} exported={csvExportActions.exported} />
             <InsightsPanel insights={analysisState.insights} />
             <SnapshotsPanel
               status={snapshotsState.status}

@@ -51,6 +51,7 @@ function renderAnalysisSuccess({
   selectedSnapshot,
   shareActions = defaultShareActions,
   exportActions,
+  csvExportActions,
 }: {
   datasetId?: string;
   analysisState?: AnalysisState;
@@ -58,6 +59,7 @@ function renderAnalysisSuccess({
   selectedSnapshot?: AnalysisSnapshot;
   shareActions?: { onCopy: () => void; copied: boolean };
   exportActions?: { onExport: () => void; exported?: boolean };
+  csvExportActions?: { onExport: () => void; exported?: boolean };
 } = {}) {
   return render(
     <AnalysisSuccess
@@ -69,6 +71,7 @@ function renderAnalysisSuccess({
       selectedSnapshot={selectedSnapshot}
       shareActions={shareActions}
       exportActions={{ onExport: vi.fn(), exported: false, ...exportActions }}
+      csvExportActions={{ onExport: vi.fn(), exported: false, ...csvExportActions }}
     />,
   );
 }

@@ -8,7 +8,7 @@ export type AnalysisExportPayload = {
   insights: Insight[];
 };
 
-export function serializeAnalysisExport(
+export function serializeAnalysisToJson(
   payload: AnalysisExportPayload,
 ): string {
   return JSON.stringify(payload, null, 2);
