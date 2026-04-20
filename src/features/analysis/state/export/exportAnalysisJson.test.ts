@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  serializeAnalysisExport,
-} from "./exportAnalysis";
+  serializeAnalysisToJson,
+} from "./exportAnalysisJson";
 
-describe("exportAnalysis", () => {
+describe("exportAnalysisJson", () => {
   it("serializes the payload as formatted JSON", () => {
-    const json = serializeAnalysisExport({
+    const json = serializeAnalysisToJson({
       datasetId: "ds_sales",
       filters: {},
       metrics: [],
@@ -17,7 +17,7 @@ describe("exportAnalysis", () => {
   });
 
   it("serializes all payload fields", () => {
-    const json = serializeAnalysisExport({
+    const json = serializeAnalysisToJson({
       datasetId: "ds_sales",
       filters: { category: "even" },
       metrics: [
