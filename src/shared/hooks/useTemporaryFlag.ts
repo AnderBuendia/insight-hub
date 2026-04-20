@@ -19,6 +19,7 @@ export function useTemporaryFlag(resetMs = 2000) {
   }, [active, resetMs]);
 
   const trigger = useCallback(() => setActive(true), []);
+  const reset = useCallback(() => setActive(false), []);
 
-  return { active, trigger };
+  return { active, trigger, reset };
 }

@@ -53,4 +53,13 @@ describe("useTemporaryFlag", () => {
 
     expect(result.current.active).toBe(true);
   });
+
+  it("resets active to false immediately when reset is called", () => {
+    const { result } = renderHook(() => useTemporaryFlag());
+
+    act(() => result.current.trigger());
+    act(() => result.current.reset());
+
+    expect(result.current.active).toBe(false);
+  });
 });
