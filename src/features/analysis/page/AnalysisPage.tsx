@@ -14,7 +14,7 @@ import { useAnalysis } from "@/features/analysis/state/useAnalysis";
 import { useSnapshots } from "@/features/analysis/state/useSnapshots";
 import { useCopyToClipboard } from "@/features/analysis/state/useCopyToClipboard";
 import { AnalysisSuccess } from "@/features/analysis/ui/AnalysisSuccess";
-import { MissingDatasetState } from "@/features/analysis/ui/MissingDatasetState";
+import { AnalysisEmptyState } from "@/features/analysis/ui/AnalysisEmptyState";
 import { useExportAnalysis } from "@/features/analysis/state/export/useExportAnalysis";
 import { useExportMetricsCsv } from "@/features/analysis/state/export/useExportMetricsCsv";
 
@@ -72,7 +72,7 @@ function AnalysisContent() {
   if (!datasetId) {
     return (
       <PageShell title="Analysis">
-        <MissingDatasetState />
+        <AnalysisEmptyState reason="no-dataset" />
       </PageShell>
     );
   }
