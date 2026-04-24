@@ -3,6 +3,7 @@ import { AIPanel } from "@/features/ai/page/AIPanel";
 import { PageShell } from "@/shared";
 import { LoadingState } from "@/features/analysis/ui/LoadingState";
 import { ErrorState } from "@/features/analysis/ui/ErrorState";
+import { AnalysisEmptyState } from "@/features/analysis/ui/AnalysisEmptyState";
 import { MetricsList } from "@/features/analysis/ui/MetricsList";
 import { FiltersList } from "@/features/analysis/ui/FiltersList";
 import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
@@ -68,6 +69,14 @@ export function AnalysisSuccess({
           message={`Failed to load analysis for dataset "${datasetId}"`}
           onRetry={analysisActions.reload}
         />
+      </PageShell>
+    );
+  }
+
+  if (analysisState.status === "success" && analysisState.metrics.length === 0) {
+    return (
+      <PageShell title="Analysis">
+        <AnalysisEmptyState reason="no-data" onReload={analysisActions.reload} />
       </PageShell>
     );
   }
