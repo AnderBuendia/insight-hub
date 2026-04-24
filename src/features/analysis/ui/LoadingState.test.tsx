@@ -36,6 +36,22 @@ describe("LoadingState", () => {
       expect(container.querySelector(".rounded-xl")).toBeInTheDocument();
       expect(container.querySelector(".border-gray-700")).toBeInTheDocument();
     });
+
+    it("renders a spinner with role status", () => {
+      // Arrange & Act
+      render(<LoadingState />);
+
+      // Assert
+      expect(screen.getByRole("status")).toBeInTheDocument();
+    });
+
+    it("renders skeleton placeholder elements", () => {
+      // Arrange & Act
+      const { container } = render(<LoadingState />);
+
+      // Assert
+      expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    });
   });
 
   describe("Props Variations", () => {
