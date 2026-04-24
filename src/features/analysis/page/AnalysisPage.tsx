@@ -72,7 +72,7 @@ function AnalysisContent() {
   if (!datasetId) {
     return (
       <PageShell title="Analysis">
-        <AnalysisEmptyState reason="no-dataset" />
+        <AnalysisEmptyState />
       </PageShell>
     );
   }
