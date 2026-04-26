@@ -1,8 +1,8 @@
-import { AnalysisLayout } from "@/features/analysis/ui/AnalysisLayout";
 import { AIPanel } from "@/features/ai/page/AIPanel";
 import { PageShell } from "@/shared";
 import { LoadingState } from "@/features/analysis/ui/LoadingState";
 import { ErrorState } from "@/features/analysis/ui/ErrorState";
+import { AnalysisSection } from "@/features/analysis/ui/AnalysisSection";
 import { MetricsList } from "@/features/analysis/ui/MetricsList";
 import { FiltersList } from "@/features/analysis/ui/FiltersList";
 import { MockCategoryFilter } from "@/features/analysis/ui/MockCategoryFilter";
@@ -74,11 +74,19 @@ export function AnalysisSuccess({
 
   return (
     <PageShell title="Analysis">
-      <AnalysisLayout
-        title="Dataset Analysis"
-        subtitle={`Dataset: ${analysisState.datasetId}`}
-        left={<MetricsList metrics={analysisState.metrics} />}
-        right={
+      <div className="space-y-8">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-50">Dataset Analysis</h1>
+          <p className="text-base text-gray-400">Dataset: {analysisState.datasetId}</p>
+        </header>
+
+        <AnalysisSection title="Metrics" description="Key numbers for this dataset.">
+          <MetricsList metrics={analysisState.metrics} />
+        </AnalysisSection>
+
+        <InsightsPanel insights={analysisState.insights} />
+
+        <AnalysisSection title="Filters" description="Narrow the dataset by category.">
           <div className="space-y-4">
             <MockCategoryFilter
               filters={analysisState.filters}
@@ -86,46 +94,46 @@ export function AnalysisSuccess({
             />
             <FiltersList filters={analysisState.filters} />
           </div>
-        }
-        bottom={
-          <>
-            {selectedSnapshot ? (
-              <div className="flex items-start justify-between gap-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-300">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 text-indigo-400">&#9432;</span>
-                  <span>
-                    Filters restored from snapshot saved on{" "}
-                    <span className="font-medium">
-                      {new Date(selectedSnapshot.createdAt).toLocaleString()}
-                    </span>
-                    . Editing filters or saving a new snapshot will not modify the original.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={snapshotsActions.clearSelection}
-                  className="shrink-0 whitespace-nowrap text-indigo-300 underline underline-offset-2 transition-colors hover:text-indigo-100"
-                >
-                  Exit snapshot view
-                </button>
-              </div>
-            ) : null}
-            <AIPanel datasetId={datasetId} />
-            <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
-            <ExportAnalysisButton onExport={exportActions.onExport} exported={exportActions.exported} />
-            <ExportMetricsCsvButton onExport={csvExportActions.onExport} exported={csvExportActions.exported} />
-            <InsightsPanel insights={analysisState.insights} />
-            <SnapshotsPanel
-              status={snapshotsState.status}
-              snapshots={snapshotsState.snapshots}
-              selectedId={snapshotsState.selectedId}
-              onSave={snapshotsActions.save}
-              onSelect={snapshotsActions.select}
-              onDeleteAll={snapshotsActions.deleteAll}
-            />
-          </>
-        }
-      />
+        </AnalysisSection>
+
+        {selectedSnapshot ? (
+          <div className="flex items-start justify-between gap-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-300">
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 text-indigo-400">&#9432;</span>
+              <span>
+                Filters restored from snapshot saved on{" "}
+                <span className="font-medium">
+                  {new Date(selectedSnapshot.createdAt).toLocaleString()}
+                </span>
+                . Editing filters or saving a new snapshot will not modify the original.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={snapshotsActions.clearSelection}
+              className="shrink-0 whitespace-nowrap text-indigo-300 underline underline-offset-2 transition-colors hover:text-indigo-100"
+            >
+              Exit snapshot view
+            </button>
+          </div>
+        ) : null}
+
+        <div className="space-y-3">
+          <AIPanel datasetId={datasetId} />
+          <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
+          <ExportAnalysisButton onExport={exportActions.onExport} exported={exportActions.exported} />
+          <ExportMetricsCsvButton onExport={csvExportActions.onExport} exported={csvExportActions.exported} />
+        </div>
+
+        <SnapshotsPanel
+          status={snapshotsState.status}
+          snapshots={snapshotsState.snapshots}
+          selectedId={snapshotsState.selectedId}
+          onSave={snapshotsActions.save}
+          onSelect={snapshotsActions.select}
+          onDeleteAll={snapshotsActions.deleteAll}
+        />
+      </div>
     </PageShell>
   );
 }
