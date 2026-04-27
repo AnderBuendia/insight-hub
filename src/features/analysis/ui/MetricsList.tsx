@@ -23,23 +23,21 @@ export function MetricsList({ metrics }: { metrics: Metric[] }) {
   }
 
   return (
-    <ul className="space-y-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {metrics.map((m) => (
-        <li
+        <div
           key={m.type}
-          className="rounded-lg border border-gray-700 p-3"
+          data-testid="metric-card"
+          className="rounded-lg border border-gray-700 bg-gray-800 p-4"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">
-              {getMetricLabel(m.type)}
-            </p>
-
-            <span className="text-sm font-mono text-gray-200">
-              {m.value.toFixed(2)}
-            </span>
-          </div>
-        </li>
+          <p className="font-mono text-2xl font-bold text-gray-100">
+            {m.value.toFixed(2)}
+          </p>
+          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+            {getMetricLabel(m.type)}
+          </p>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
