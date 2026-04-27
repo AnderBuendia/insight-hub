@@ -12,6 +12,7 @@ Guide the user to create a `.prompt.md` focused on finishing development tasks f
 Review the conversation and detect if the user is repeatedly completing development tasks.
 
 Extract:
+- Use English for all communication
 - Type of task (feature, fix, refactor)
 - Use of git diff
 - Need for atomic commits
@@ -34,7 +35,7 @@ If unclear, ask:
    - Proposes atomic commits
    - Uses Conventional Commits
    - Validates changes
-   - Generates PR using the provided template
+   - Generates PR markdown using the provided template
 
 2. Ensure the PR output includes:
 
