@@ -12,7 +12,7 @@ describe("MetricsList", () => {
     render(<MetricsList metrics={[]} />);
 
     expect(screen.getByText("No metrics available")).toBeInTheDocument();
-    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("metric-card")).not.toBeInTheDocument();
   });
 
   it("renders domain metrics with their labels and formatted values", () => {
@@ -32,7 +32,7 @@ describe("MetricsList", () => {
     expect(screen.getByText("40.00")).toBeInTheDocument();
   });
 
-  it("renders one list item per metric", () => {
+  it("renders one metric card per metric", () => {
     const metrics: Metric[] = [
       { type: "total", value: 10 },
       { type: "count", value: 2 },
@@ -40,7 +40,6 @@ describe("MetricsList", () => {
 
     render(<MetricsList metrics={metrics} />);
 
-    expect(screen.getByRole("list")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getAllByTestId("metric-card")).toHaveLength(2);
   });
 });
