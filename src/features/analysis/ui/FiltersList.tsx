@@ -1,4 +1,20 @@
+import type { ReactNode } from "react";
 import type { AnalysisFilters } from "@/domain";
+
+function FilterBadge({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <li className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-indigo-400/25 bg-indigo-400/10 px-2.5 py-1.5 text-xs font-medium text-indigo-100">
+      <span className="shrink-0 text-indigo-300/80">{label}</span>
+      <span className="min-w-0">{children}</span>
+    </li>
+  );
+}
 
 export function FiltersList({ filters = {} }: { filters?: AnalysisFilters }) {
   const hasDateRange = Boolean(filters.dateRange);
@@ -7,30 +23,42 @@ export function FiltersList({ filters = {} }: { filters?: AnalysisFilters }) {
 
   if (!hasFilters) {
     return (
-      <p className="text-xs italic text-gray-500">No active filters.</p>
+      <div className="rounded-md border border-dashed border-gray-600 bg-gray-900/40 px-3 py-2">
+        <p className="text-sm font-medium text-gray-300">No active filters.</p>
+        <p className="mt-1 text-xs text-gray-500">
+          The analysis is showing the full dataset.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-        Active filters
-      </p>
+    <div className="space-y-2">
+      <div className="space-y-0.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
+          Active filters
+        </p>
+        <p className="text-xs text-gray-500">
+          Metrics and insights below are calculated from this filtered subset.
+        </p>
+      </div>
       <ul className="flex flex-wrap gap-2">
         {filters.category ? (
-          <li className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-medium ring-1 ring-indigo-500/30">
-            <span className="text-indigo-400/70">category</span>
-            <span className="text-indigo-100">{filters.category}</span>
-          </li>
+          <FilterBadge label="category">
+            <span>{filters.category}</span>
+          </FilterBadge>
         ) : null}
 
         {filters.dateRange ? (
-          <li className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-medium ring-1 ring-indigo-500/30">
-            <span className="text-indigo-400/70">date</span>
-            <span className="font-mono text-indigo-100">{filters.dateRange.from}</span>
-            <span className="text-indigo-400/60">&rarr;</span>
-            <span className="font-mono text-indigo-100">{filters.dateRange.to}</span>
-          </li>
+          <FilterBadge label="date">
+            <span className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <span className="font-mono">{filters.dateRange.from}</span>
+              <span className="text-indigo-300/60" aria-hidden="true">
+                &rarr;
+              </span>
+              <span className="font-mono">{filters.dateRange.to}</span>
+            </span>
+          </FilterBadge>
         ) : null}
       </ul>
     </div>

@@ -12,6 +12,9 @@ describe("FiltersList", () => {
     render(<FiltersList filters={{}} />);
 
     expect(screen.getByText("No active filters.")).toBeInTheDocument();
+    expect(
+      screen.getByText("The analysis is showing the full dataset."),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
@@ -21,6 +24,12 @@ describe("FiltersList", () => {
     render(<FiltersList filters={filters} />);
 
     expect(screen.getByRole("list")).toBeInTheDocument();
+    expect(screen.getByText("Active filters")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Metrics and insights below are calculated from this filtered subset.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("category")).toBeInTheDocument();
     expect(screen.getByText("even")).toBeInTheDocument();
   });
