@@ -9,3 +9,11 @@ export type {
 export { applyFilters, computeMetrics } from "./analysis";
 export type { Insight } from "./insights";
 export { deriveInsights } from "./insights";
+export type {
+  AIAssistantContext,
+  AIAssistantRequest,
+  AIAssistantResponse,
+  AIAssistantError,
+  AIAssistantResult,
+  AIAssistantCitation,
+} from "./ai";

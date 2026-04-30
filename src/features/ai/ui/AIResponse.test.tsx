@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { AIResponse } from "./AIResponse";
-import type { InfraAIResponse } from "@/infra";
+import type { AIAssistantResponse } from "@/domain";
 
 describe("AIResponse", () => {
   it("renders answer text", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "This is the AI answer to your question.",
     };
 
@@ -21,7 +21,7 @@ describe("AIResponse", () => {
 
   it("does not render citations section when citations are empty", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "Answer without citations",
       citations: [],
     };
@@ -36,7 +36,7 @@ describe("AIResponse", () => {
 
   it("does not render citations section when citations are undefined", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "Answer without citations",
     };
 
@@ -50,7 +50,7 @@ describe("AIResponse", () => {
 
   it("renders citations when provided", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "Answer with citations",
       citations: [
         { title: "Source 1", url: "https://example.com/1" },
@@ -71,7 +71,7 @@ describe("AIResponse", () => {
 
   it("renders multiple citations in a list", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "Answer",
       citations: [
         { title: "Citation A" },
@@ -90,7 +90,7 @@ describe("AIResponse", () => {
 
   it("renders with proper container styling", () => {
     // Arrange
-    const response: InfraAIResponse = {
+    const response: AIAssistantResponse = {
       answer: "Test answer",
     };
 

@@ -1,6 +1,6 @@
-import type { InfraAIResponse } from "@/infra";
+import type { AIAssistantResponse } from "@/domain";
 
-export function AIResponse({ response }: { response: InfraAIResponse }) {
+export function AIResponse({ response }: { response: AIAssistantResponse }) {
   return (
     <div className="rounded-xl border border-gray-700 bg-gray-900 p-3">
       <p className="text-sm text-gray-100">{response.answer}</p>

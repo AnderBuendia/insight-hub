@@ -64,8 +64,10 @@ export function useAI(datasetId: string) {
     });
 
     const result = await AIInfra.submitAIQuery({
-      datasetId: requestDatasetId,
       prompt,
+      context: {
+        datasetId: requestDatasetId,
+      },
     });
 
     if (!result.ok) {
