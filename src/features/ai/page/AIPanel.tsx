@@ -6,9 +6,22 @@ import { useAI } from "@/features/ai/state/useAI";
 import { AIForm } from "@/features/ai/ui/AIForm";
 import { AIResponse } from "@/features/ai/ui/AIResponse";
 import { AIErrorState } from "@/features/ai/ui/AIErrorState";
+import type { AnalysisFilters, Metric } from "@/domain";
 
-export function AIPanel({ datasetId = "" }: { datasetId?: string }) {
-  const { state, actions } = useAI(datasetId);
+export function AIPanel({
+  datasetId = "",
+  filters,
+  metrics,
+}: {
+  datasetId?: string;
+  filters?: AnalysisFilters;
+  metrics?: Metric[];
+}) {
+  const { state, actions } = useAI({
+    datasetId,
+    ...(filters ? { filters } : {}),
+    ...(metrics ? { metrics } : {}),
+  });
 
   if (state.status === "disabled") {
     return (

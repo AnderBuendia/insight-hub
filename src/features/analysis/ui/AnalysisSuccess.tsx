@@ -119,7 +119,11 @@ export function AnalysisSuccess({
         ) : null}
 
         <div className="space-y-3">
-          <AIPanel datasetId={datasetId} />
+          <AIPanel
+            datasetId={datasetId}
+            filters={analysisState.filters}
+            metrics={analysisState.metrics}
+          />
           <ShareAnalysisButton onCopy={shareActions.onCopy} copied={shareActions.copied} />
           <ExportAnalysisButton onExport={exportActions.onExport} exported={exportActions.exported} />
           <ExportMetricsCsvButton onExport={csvExportActions.onExport} exported={csvExportActions.exported} />

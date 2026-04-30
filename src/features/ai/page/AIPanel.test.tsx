@@ -255,6 +255,37 @@ describe("AIPanel", () => {
           },
         });
       });
+
+      it("passes filters and metrics into AIInfra on submit", async () => {
+        // Arrange
+        const user = userEvent.setup();
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "Response" },
+        });
+
+        render(
+          <AIPanel
+            datasetId="ds_456"
+            filters={{ category: "even" }}
+            metrics={[{ type: "total", value: 60 }]}
+          />,
+        );
+
+        // Act
+        await user.type(screen.getByRole("textbox"), "Explain active state");
+        await user.click(screen.getByRole("button", { name: /Ask/i }));
+
+        // Assert
+        expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
+          prompt: "Explain active state",
+          context: {
+            datasetId: "ds_456",
+            filters: { category: "even" },
+            metrics: [{ type: "total", value: 60 }],
+          },
+        });
+      });
     });
 
     describe("Success State", () => {
