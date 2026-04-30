@@ -1,0 +1,83 @@
+# JIRA MCP Integration Plan
+
+JIRA should become the source of truth for the Harness Engineering backlog.
+This repository should not maintain a parallel local task list.
+
+## Current Recommendation
+
+Use Atlassian's official remote MCP server first, rather than building a custom
+MCP server immediately.
+
+Atlassian documents a remote MCP server for Jira, Confluence, and Compass at:
+
+- `https://mcp.atlassian.com/v1/mcp`
+
+The documented setup uses OAuth 2.1 authorization and lets MCP-capable clients
+connect to Atlassian cloud data without a project-local server.
+
+Note: Atlassian documents that the older `/sse` endpoint is deprecated after
+2026-06-30, so new client configuration should use `/mcp`.
+
+## Harness Behavior
+
+When JIRA MCP is available:
+
+1. The leader fetches the requested or assigned issue.
+2. The issue key, summary, acceptance criteria, links, and status are recorded
+   in `progress/current.md`.
+3. Explorers and implementers write durable reports under `progress/`.
+4. The validation reviewer runs verification and writes a report.
+5. The finish-task prompt prepares JIRA comments/status updates and the PR.
+
+When JIRA MCP is not available:
+
+1. The user-provided task becomes the local work item.
+2. `progress/current.md` records that JIRA context was unavailable.
+3. The session can proceed if the task is clear and bounded.
+4. No agent should invent issue metadata.
+
+## Build-Vs-Buy Decision
+
+Start with the official Atlassian remote MCP because it provides:
+
+- Hosted connectivity.
+- OAuth-based authentication.
+- JIRA and Confluence coverage.
+- Lower maintenance cost.
+
+Consider a custom MCP only if the project needs behavior the official server
+cannot provide, such as:
+
+- Opinionated JQL presets.
+- Project-specific issue transition policies.
+- Custom field normalization.
+- Automatic PR/JIRA linking conventions.
+- Guardrails around who may transition or comment on issues.
+
+## Possible Custom MCP Shape
+
+If a custom MCP becomes necessary, keep it thin:
+
+- Transport: stdio for local clients first; remote HTTP only if needed.
+- Auth: environment-provided Atlassian API token or OAuth app credentials.
+- Tools:
+  - `jira_get_issue(issueKey)`
+  - `jira_search_issues(jql, limit)`
+  - `jira_add_comment(issueKey, body)`
+  - `jira_transition_issue(issueKey, transitionName)`
+  - `jira_get_current_user()`
+- Resources:
+  - `jira://issue/{issueKey}`
+  - `jira://project/{projectKey}/active-sprint`
+- Safety:
+  - Reads are allowed by default.
+  - Writes require explicit confirmation or a client-side approval rule.
+  - Transitions must be reported in `progress/history.md`.
+
+## Open Questions
+
+- Which Atlassian site and project key should InsightHub use?
+- Which JIRA statuses map to harness lifecycle states?
+- Which issue fields contain acceptance criteria?
+- Should agents be allowed to comment automatically, or only propose comments?
+- Should issue transitions require human approval?

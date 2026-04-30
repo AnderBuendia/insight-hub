@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#AI
-.claude
+# AI local state
+.claude/*
+!.claude/agents/
+!.claude/agents/**
+!.claude/settings.json

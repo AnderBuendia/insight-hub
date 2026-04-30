@@ -1,0 +1,26 @@
+{
+  "$schema_comment": "Claude Code hooks for the portable InsightHub harness. These checks support, but do not replace, ./init.sh.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./init.sh > /tmp/insight_hub_harness_init.log 2>&1 && echo '[harness] init.sh OK' || (echo '[harness] init.sh failed; review /tmp/insight_hub_harness_init.log before closing' && tail -40 /tmp/insight_hub_harness_init.log)",
+            "description": "Run the full harness verification before Claude stops."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(./init.sh)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run test:coverage)",
+      "Bash(npm run build)",
+      "Bash(npm run validations)"
+    ]
+  }
+}

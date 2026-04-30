@@ -1,0 +1,122 @@
+# AGENTS.md — Navigation Map for AI Agents
+
+This repository is designed to be worked on by autonomous AI agents with a
+small, explicit harness. This file is the entry point. It is a map, not a rule
+dump: read the linked documents only when they are relevant to the task.
+
+---
+
+## 1. Required Startup
+
+Before changing code:
+
+1. Run `./init.sh` and confirm it exits successfully.
+2. Read `progress/current.md` to understand whether a session is already active.
+3. Identify the active work item:
+   - Prefer the JIRA issue provided by the user or fetched through the JIRA MCP.
+   - If JIRA is not connected yet, use the user's explicit request as the work item.
+4. Work on exactly one task at a time:
+   - If the user gave an explicit task, use that task.
+   - If no task is clear and JIRA MCP is unavailable, stop and ask for a work item.
+5. Record the JIRA key or local task label, start time, agent/tool, and short
+   plan in `progress/current.md`.
+
+If `./init.sh` fails, fix or document the environment problem before touching
+product code.
+
+---
+
+## 2. Repository Map
+
+| Path | Purpose | Read When |
+| --- | --- | --- |
+| `progress/current.md` | Live session state | Always at startup and while working |
+| `progress/history.md` | Append-only session history | Before closing or when context is needed |
+| `docs/harness/jira-mcp.md` | JIRA MCP research and integration plan | When selecting or updating work items |
+| `docs/ARCHITECTURE.md` | Product architecture and layer responsibilities | Before implementation |
+| `docs/CONVENTIONS.md` | Naming, styling, lint, branching conventions | Before editing code |
+| `docs/TESTING.md` | Test structure and coverage expectations | Before writing tests |
+| `docs/DEFINITION_OF_DONE.md` | Human-facing completion criteria | Before marking done |
+| `docs/DOMAIN.md` and `docs/domain/` | Domain model and invariants | For domain changes |
+| `docs/decisions/` | Architecture Decision Records | For non-trivial trade-offs |
+| `CHECKPOINTS.md` | Objective final-state review checklist | Before closing |
+| `.agents/roles/` | Portable role definitions | When orchestrating subagents |
+| `.claude/agents/` | Claude-specific role wrappers | Claude Code only |
+| `.codex/` | Codex-specific harness notes | Codex only |
+| `.github/instructions/` | GitHub Copilot area-specific instructions | Copilot only |
+
+---
+
+## 3. Hard Rules
+
+- One task at a time. Do not mix unrelated features, fixes, or refactors.
+- Do not mark a task `done` without green verification.
+- Keep `progress/current.md` updated while working, not only at the end.
+- JIRA is the intended source of truth for backlog and task state. Do not
+  maintain a parallel local task list in this repository.
+- Respect layer boundaries:
+  - `src/domain/` is framework-agnostic business logic.
+  - `src/infra/` is adapters and external integration.
+  - `src/features/` owns feature orchestration and user-facing flows.
+  - `src/app/` is Next.js route composition.
+  - `src/shared/` is reusable and domain-agnostic.
+- Tailwind classes belong in `/ui` directories, per `docs/CONVENTIONS.md`.
+- Tests are co-located with source files and must preserve coverage thresholds.
+- If a tool behaves unexpectedly, document the blocker instead of inventing an
+  unverified workaround.
+
+---
+
+## 4. How to Choose Work
+
+JIRA-connected mode:
+
+```text
+1. Use the configured JIRA MCP to fetch the assigned or requested issue.
+2. Read the issue title, description, acceptance criteria, labels, and links.
+3. Confirm the issue is small enough for one session.
+4. Update progress/current.md with the JIRA key, summary, plan, and start time.
+5. Reflect progress back to JIRA when the MCP is available and the action is safe.
+```
+
+User-directed mode:
+
+```text
+1. Treat the user's request as the active task.
+2. If the user gives a JIRA key, fetch context through the JIRA MCP when available.
+3. If JIRA MCP is not available, record the request directly in progress/current.md.
+4. Keep the same one-task-at-a-time lifecycle.
+```
+
+---
+
+## 5. Multi-Agent Pattern
+
+Use the portable role definitions in `.agents/roles/`:
+
+- `leader.md` — decomposes and coordinates, does not implement product code.
+- `explorer.md` — investigates bounded questions before implementation.
+- `implementer.md` — implements exactly one task with tests and verification.
+- `reviewer.md` — reviews code changes against docs and checkpoints, does not edit.
+- `validation-reviewer.md` — runs automated validation and, later, manual web
+  checks such as Puppeteer/Playwright smoke flows.
+
+Anti-telephone rule: subagents write their findings to files in `progress/` and
+return only a short pointer, such as `done -> progress/impl_<task>.md`.
+
+---
+
+## 6. Session Close
+
+Before ending a session:
+
+1. Run `./init.sh`.
+2. If the task is complete and JIRA MCP is available, propose or perform the
+   agreed JIRA transition/comment.
+3. If the task is blocked, document the blocker and next step in
+   `progress/current.md`; mirror it to JIRA when possible.
+4. Append the session summary to `progress/history.md`.
+5. Reset `progress/current.md` to the empty template.
+6. Leave no debug logs, temporary files, or unexplained TODOs.
+
+If final verification is red, do not close the task as done.
