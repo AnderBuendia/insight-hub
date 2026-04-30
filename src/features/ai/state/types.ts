@@ -1,8 +1,8 @@
-import type { InfraAIResponse } from "@/infra";
+import type { AIAssistantResponse } from "@/domain";
 
 type AIHistoryItem = {
   prompt: string;
-  response: InfraAIResponse;
+  response: AIAssistantResponse;
 };
 
 export type AIState =

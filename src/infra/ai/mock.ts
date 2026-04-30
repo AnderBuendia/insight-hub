@@ -1,9 +1,10 @@
-import type { InfraAIRequest, InfraAIResponse } from "./types";
+import type { AIAssistantRequest, AIAssistantResponse } from "@/domain";
 
-export function buildMockAIResponse(req: InfraAIRequest): InfraAIResponse {
-  // Minimal deterministic mock: echo prompt + dataset context
+export function buildMockAIResponse(
+  req: AIAssistantRequest,
+): AIAssistantResponse {
   return {
-    answer: `Mock AI answer for dataset "${req.datasetId}". You asked: "${req.prompt}"`,
+    answer: `Mock AI answer for dataset "${req.context.datasetId}". You asked: "${req.prompt}"`,
     citations: [
       { title: "Mock citation: Dataset documentation" },
       { title: "Mock citation: Metrics glossary" },

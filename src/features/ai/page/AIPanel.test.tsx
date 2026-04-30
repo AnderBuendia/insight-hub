@@ -249,8 +249,10 @@ describe("AIPanel", () => {
 
         // Assert
         expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
-          datasetId: "ds_456",
           prompt: "Calculate sum",
+          context: {
+            datasetId: "ds_456",
+          },
         });
       });
     });

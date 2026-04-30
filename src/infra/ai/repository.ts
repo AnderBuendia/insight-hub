@@ -1,8 +1,8 @@
 import type {
-  AIGatewayScenario,
-  InfraAIRequest,
-  SubmitAIResult,
-} from "./types";
+  AIAssistantRequest,
+  AIAssistantResult,
+} from "@/domain";
+import type { AIGatewayScenario } from "./types";
 import { buildMockAIResponse } from "./mock";
 
 let scenario: AIGatewayScenario = "success";
@@ -12,11 +12,14 @@ export function setAIGatewayScenario(next: AIGatewayScenario) {
 }
 
 export async function submitAIQuery(
-  req: InfraAIRequest,
-): Promise<SubmitAIResult> {
+  req: AIAssistantRequest,
+): Promise<AIAssistantResult> {
   await new Promise((r) => setTimeout(r, 250));
 
-  if (!req.datasetId || !req.prompt.trim()) {
+  const prompt = req?.prompt;
+  const datasetId = req?.context?.datasetId;
+
+  if (!datasetId || typeof prompt !== "string" || !prompt.trim()) {
     return {
       ok: false,
       error: {

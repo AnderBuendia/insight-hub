@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AIInfra } from "@/infra";
-import type { SubmitAIResult } from "@/infra";
+import type { AIAssistantResult } from "@/domain";
 
 // Mock the infra module
 vi.mock("@/infra", () => ({
@@ -257,8 +257,10 @@ describe("useAI", () => {
 
         // Assert
         expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
-          datasetId: "ds_456",
           prompt: "Calculate sum",
+          context: {
+            datasetId: "ds_456",
+          },
         });
         expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(1);
       });
@@ -286,8 +288,10 @@ describe("useAI", () => {
 
         // Assert - Should use the latest prompt via ref
         expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
-          datasetId: "ds_123",
           prompt: "Final query",
+          context: {
+            datasetId: "ds_123",
+          },
         });
       });
     });
@@ -374,9 +378,9 @@ describe("useAI", () => {
       it("discards stale response when datasetId changes mid-flight", async () => {
         // Arrange
         const { useAI } = await import("./useAI");
-        let resolveQuery!: (value: SubmitAIResult) => void;
+        let resolveQuery!: (value: AIAssistantResult) => void;
         vi.mocked(AIInfra.submitAIQuery).mockImplementation(
-          () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+          () => new Promise<AIAssistantResult>((resolve) => { resolveQuery = resolve; }),
         );
 
         const { result, rerender } = renderHook(
@@ -408,10 +412,10 @@ describe("useAI", () => {
         // Arrange – reproduces the P1 bug: promptRef was cleared before the staleness
         // guard ran, leaving the textarea showing a prompt that could not be submitted.
         const { useAI } = await import("./useAI");
-        let resolveStale!: (value: SubmitAIResult) => void;
+        let resolveStale!: (value: AIAssistantResult) => void;
         vi.mocked(AIInfra.submitAIQuery)
           .mockImplementationOnce(
-            () => new Promise<SubmitAIResult>((resolve) => { resolveStale = resolve; }),
+            () => new Promise<AIAssistantResult>((resolve) => { resolveStale = resolve; }),
           )
           .mockResolvedValueOnce({ ok: true, data: { answer: "Fresh response" } });
 
@@ -446,8 +450,10 @@ describe("useAI", () => {
         // Assert – request fired and fresh response stored in history
         expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
         expect(AIInfra.submitAIQuery).toHaveBeenLastCalledWith({
-          datasetId: "ds_456",
           prompt: "Query",
+          context: {
+            datasetId: "ds_456",
+          },
         });
         expect(result.current.state).toMatchObject({
           status: "success",
@@ -564,12 +570,16 @@ describe("useAI", () => {
         // Assert
         expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
         expect(AIInfra.submitAIQuery).toHaveBeenNthCalledWith(1, {
-          datasetId: "ds_123",
           prompt: "First query",
+          context: {
+            datasetId: "ds_123",
+          },
         });
         expect(AIInfra.submitAIQuery).toHaveBeenNthCalledWith(2, {
-          datasetId: "ds_123",
           prompt: "Second query",
+          context: {
+            datasetId: "ds_123",
+          },
         });
       });
 
@@ -678,9 +688,9 @@ describe("useAI", () => {
       vi.doMock("@/shared", () => ({ FeatureFlags: flags }));
       const { useAI } = await import("./useAI");
 
-      let resolveQuery!: (value: SubmitAIResult) => void;
+      let resolveQuery!: (value: AIAssistantResult) => void;
       vi.mocked(AIInfra.submitAIQuery).mockImplementation(
-        () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+        () => new Promise<AIAssistantResult>((resolve) => { resolveQuery = resolve; }),
       );
 
       const { result, rerender } = renderHook(
@@ -888,9 +898,9 @@ describe("useAI", () => {
     it("discards in-flight response when clear is called during loading", async () => {
       // Arrange
       const { useAI } = await import("./useAI");
-      let resolveQuery!: (value: SubmitAIResult) => void;
+      let resolveQuery!: (value: AIAssistantResult) => void;
       vi.mocked(AIInfra.submitAIQuery).mockImplementation(
-        () => new Promise<SubmitAIResult>((resolve) => { resolveQuery = resolve; }),
+        () => new Promise<AIAssistantResult>((resolve) => { resolveQuery = resolve; }),
       );
       const { result } = renderHook(() => useAI("ds_123"));
 
