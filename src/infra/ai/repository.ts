@@ -16,7 +16,10 @@ export async function submitAIQuery(
 ): Promise<AIAssistantResult> {
   await new Promise((r) => setTimeout(r, 250));
 
-  if (!req.context.datasetId || !req.prompt.trim()) {
+  const prompt = req?.prompt;
+  const datasetId = req?.context?.datasetId;
+
+  if (!datasetId || typeof prompt !== "string" || !prompt.trim()) {
     return {
       ok: false,
       error: {
