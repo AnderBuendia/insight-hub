@@ -43,7 +43,9 @@ for all generated repository artifacts.
      `not available`, not as pass.
 8. Confirm no unrelated changes are mixed into the task.
 9. Propose atomic commits using Conventional Commits.
-10. Generate PR markdown using `.github/pull_request_template.md`.
+10. Generate PR markdown using the exact section structure from
+    `.github/pull_request_template.md`; document the implemented changes under
+    its `## Changes` section.
 11. Draft a JIRA update comment and transition recommendation when JIRA context
     is available.
 12. Update `progress/history.md` with the closing summary.
@@ -65,25 +67,32 @@ to finish and commit.
 
 ## PR Output
 
-Generate PR content with these sections, matching the repository template where
-possible:
+Generate PR content with the same section order and headings as
+`.github/pull_request_template.md`. Do not replace the repository template with
+an alternate PR structure. Fill the template with concrete task details,
+including the change documentation under `## Changes`.
 
 ```markdown
 ## Summary
 
-- ...
+Briefly explain what this PR does and why it exists.
 
-## JIRA
-
-- Issue: <KEY or "Unavailable">
-- Status before PR:
-- Suggested update:
+**JIRA Ticket**: https://contactoanderbuendia.atlassian.net/browse/<KEY or XXXX>
 
 ## Context
 
+What problem does this PR address?
+Link to related issues, decisions, or documents if applicable.
+
 ## Changes
 
+- Document the actual implementation changes here.
+- Keep bullets concrete and aligned to the inspected `git diff`.
+
 ## Decisions
+
+Important technical or product decisions made in this PR.
+Explain trade-offs if relevant.
 
 ## Impact
 
@@ -91,23 +100,18 @@ possible:
 - Domain:
 - Data flow:
 - Performance:
-- Harness/agent workflow:
-
-## Validation
-
-- `./init.sh`: pass/fail
-- `npm run build`: pass/fail/not required
-- Browser validation: pass/fail/not available
 
 ## Risks / Considerations
 
+Anything reviewers should pay special attention to?
+Potential edge cases, follow-up work, or known limitations.
+
 ## Checklist
 
-- [ ] One task only
-- [ ] Tests and coverage pass
-- [ ] Layer boundaries respected
-- [ ] JIRA update prepared or applied
-- [ ] progress/history.md updated
+- [ ] Code is easy to understand
+- [ ] Domain rules are respected
+- [ ] No unnecessary coupling introduced
+- [ ] Docs updated (if needed)
 ```
 
 ## JIRA Update Draft

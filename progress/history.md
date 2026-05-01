@@ -49,3 +49,18 @@
 - **Task:** Fix AI assistant panel state so history and stale responses are scoped to the full analysis context, not only `datasetId`.
 - **Changes:** Added full assistant-context keying for `useAI`; reset AI state when filters or metrics change; discard stale mid-flight responses after context changes; added focused hook and panel tests for full-context behavior.
 - **Verification:** Focused AI/analysis tests passed with 69 tests; `npm run typecheck` passed; `npm run test:coverage` passed; `./init.sh` passed.
+
+## 2026-04-30 - Finish prompt PR template alignment
+
+- **Agent/tool:** Codex
+- **Task:** Make `.github/prompt/finish-task.prompt.md` require change documentation using the repository PR template structure.
+- **Changes:** Updated the finish-task required flow and PR output instructions to use the exact headings from `.github/pull_request_template.md`, with implementation details documented under `## Changes`.
+- **Verification:** `./init.sh` passed.
+
+## 2026-04-30 - Finish prompt rerun for pushed IHSQD-61 branch
+
+- **Agent/tool:** Codex
+- **Task:** Re-run `.github/prompt/finish-task.prompt.md` for the commits pushed to `IHSQD-61-ai-analysis-context`.
+- **Checks:** Read `AGENTS.md`, `CHECKPOINTS.md`, `progress/current.md`, `.github/prompt/finish-task.prompt.md`, and `.github/pull_request_template.md`; inspected `git diff --stat origin/main...HEAD` and `git diff origin/main...HEAD`; fetched `IHSQD-61` through Atlassian MCP.
+- **Verification:** `./init.sh` passed; `npm run build` passed after rerunning with network access for Next font downloads.
+- **Close state:** `IHSQD-61` remained `Finalizado`; `progress/current.md` remained reset to idle.
