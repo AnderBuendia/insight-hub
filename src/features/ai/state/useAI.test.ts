@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AIInfra } from "@/infra";
 import type { AIAssistantResult } from "@/domain";
+import type * as React from "react";
 
 // Mock the infra module
 vi.mock("@/infra", () => ({
@@ -96,6 +97,7 @@ describe("useAI", () => {
     });
 
     afterEach(() => {
+      vi.doUnmock("react");
       vi.resetModules();
     });
 
@@ -631,6 +633,57 @@ describe("useAI", () => {
           status: "success",
           datasetId: "ds_123",
           history: [{ prompt: "Explain this view", response: { answer: "Fresh response" } }],
+        });
+      });
+
+      it("discards stale same-dataset context responses before the context reset effect runs", async () => {
+        // Arrange
+        vi.resetModules();
+        vi.doMock("@/shared", () => ({
+          FeatureFlags: { aiEnabled: true },
+        }));
+        vi.doMock("react", async () => {
+          const actual = await vi.importActual<typeof React>("react");
+          return {
+            ...actual,
+            useEffect: vi.fn(),
+          };
+        });
+
+        const { useAI } = await import("./useAI");
+        let resolveStale!: (value: AIAssistantResult) => void;
+        vi.mocked(AIInfra.submitAIQuery).mockImplementationOnce(
+          () => new Promise<AIAssistantResult>((resolve) => { resolveStale = resolve; }),
+        );
+
+        const { result, rerender } = renderHook(
+          ({ filters }) => useAI({
+            datasetId: "ds_123",
+            filters,
+            metrics: [{ type: "total" as const, value: 60 }],
+          }),
+          { initialProps: { filters: { category: "even" } } },
+        );
+
+        act(() => {
+          result.current.actions.setPrompt("Explain this view");
+        });
+        act(() => {
+          void result.current.actions.submit();
+        });
+
+        // Act - rerender the new context and resolve the stale request before effects run.
+        rerender({ filters: { category: "odd" } });
+        await act(async () => {
+          resolveStale({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        // Assert
+        expect(result.current.state).toEqual({
+          status: "loading",
+          datasetId: "ds_123",
+          prompt: "Explain this view",
+          history: [],
         });
       });
     });

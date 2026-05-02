@@ -27,6 +27,8 @@ export function useAI(context: string | AIAssistantContext) {
   const { datasetId } = assistantContext;
   const promptRef = useRef("");
   const contextKeyRef = useRef(assistantContextKey);
+  // eslint-disable-next-line react-hooks/refs -- stale response guards must observe context changes before effects run.
+  contextKeyRef.current = assistantContextKey;
 
   const [state, setState] = useState<AIState>(() => {
     if (!FeatureFlags.aiEnabled) return { status: "disabled" };
@@ -34,8 +36,6 @@ export function useAI(context: string | AIAssistantContext) {
   });
 
   useEffect(() => {
-    contextKeyRef.current = assistantContextKey;
-
     setState((prev) => {
       if (!enabled) {
         if (prev.status === "disabled") return prev;

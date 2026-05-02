@@ -88,3 +88,11 @@
 - **Changes:** Added `docs/harness/model-routing.md` with routing lanes, mini preconditions, escalation triggers, and an automation contract. Added `.github/prompt/route-task.prompt.md` as a pre-flight classifier, updated AGENTS/Codex/Copilot/finish-task/checkpoint guidance to reference the shared policy, and made `init.sh` require the new routing files.
 - **Verification:** `./init.sh` passed with lint, typecheck, and coverage above 80%.
 - **Close state:** Local harness task complete; no JIRA transition performed because this was a user-directed local task.
+
+## 2026-05-02 - AI context key render synchronization review fix
+
+- **Agent/tool:** Codex
+- **Task:** Address review feedback for `src/features/ai/state/useAI.ts`: move `contextKeyRef.current` assignment out of `useEffect` so stale same-dataset context responses are discarded even before effects run.
+- **Changes:** Updated `useAI` to synchronize the context key ref during render with a targeted lint exception documenting the stale-response guard; added a regression test that defers the hook effect, rerenders filters, and resolves the stale request before the effect can reset state.
+- **Verification:** `npm test -- src/features/ai/state/useAI.test.ts` passed with 37 tests; final `./init.sh` passed with lint, typecheck, and coverage above 80%.
+- **Close state:** Local review fix complete; no JIRA transition performed because this was a user-directed local task.
