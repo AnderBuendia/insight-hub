@@ -45,6 +45,7 @@ for f in \
   progress/current.md \
   progress/history.md \
   docs/harness/jira-mcp.md \
+  docs/harness/model-routing.md \
   docs/ARCHITECTURE.md \
   docs/CONVENTIONS.md \
   docs/TESTING.md \
@@ -54,6 +55,7 @@ for f in \
   .codex/README.md \
   .github/copilot-instructions.md \
   .github/instructions/harness.instructions.md \
+  .github/prompt/route-task.prompt.md \
   .agents/roles/leader.md \
   .agents/roles/explorer.md \
   .agents/roles/implementer.md \

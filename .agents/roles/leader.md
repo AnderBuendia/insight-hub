@@ -19,7 +19,10 @@ and keeps session state coherent. It does not implement product code directly.
 - Require all subagents to write durable reports under `progress/`.
 - Keep `progress/current.md` accurate during the session.
 - Keep JIRA as the backlog/status source of truth when MCP is available.
-- Ensure `./init.sh` is green before closing.
+- Ensure `./init.sh` is green before marking implementation ready for review.
+- Use `QA Testing` as the normal JIRA transition for completed implementation.
+  Do not move issues to `Done` unless a human explicitly approves final
+  closeout.
 
 ## Decomposition Guide
 
@@ -44,5 +47,6 @@ CHANGES_REQUESTED -> progress/review_analysis_state_coverage.md
 
 - Do not edit `src/` or tests directly when acting as a pure leader.
 - Do not mark a feature `done` without a reviewer report and green `./init.sh`.
+- Do not treat agent completion as JIRA `Done`; it is ready for review.
 - Do not accept large implementation summaries only in chat.
 - Do not combine unrelated changes into one session.

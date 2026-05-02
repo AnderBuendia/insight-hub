@@ -28,6 +28,8 @@ When JIRA MCP is available:
 3. Explorers and implementers write durable reports under `progress/`.
 4. The validation reviewer runs verification and writes a report.
 5. The finish-task prompt prepares JIRA comments/status updates and the PR.
+6. Completed implementation work moves to `QA Testing`. `Done` is
+   reserved for the human-approved post-review closeout.
 
 When JIRA MCP is not available:
 
@@ -72,12 +74,22 @@ If a custom MCP becomes necessary, keep it thin:
 - Safety:
   - Reads are allowed by default.
   - Writes require explicit confirmation or a client-side approval rule.
+  - The default completion transition is `QA Testing`.
+  - `Done` requires explicit human approval in the current session.
   - Transitions must be reported in `progress/history.md`.
+
+## Status Mapping
+
+| Harness state | JIRA status | Notes |
+| --- | --- | --- |
+| Active implementation | In progress / equivalent project status | Use the actual project workflow name exposed by JIRA. |
+| Green implementation ready for review | QA Testing | Default transition after verification and PR/comment preparation. |
+| Blocked | Blocked / comment only | If no blocked status exists, leave status unchanged and comment the blocker. |
+| Human-approved final closeout | Done | Agents must not use this as the normal implementation closeout. |
 
 ## Open Questions
 
 - Which Atlassian site and project key should InsightHub use?
-- Which JIRA statuses map to harness lifecycle states?
 - Which issue fields contain acceptance criteria?
 - Should agents be allowed to comment automatically, or only propose comments?
 - Should issue transitions require human approval?

@@ -16,7 +16,9 @@ a healthy final state after an agent session.
 
 - [ ] Exactly one active work item is recorded in `progress/current.md`, or the session is idle.
 - [ ] JIRA is treated as the source of truth for backlog state when available.
-- [ ] Completed tasks are transitioned or commented in JIRA only after green verification.
+- [ ] Completed implementation work is transitioned or commented in JIRA only after green verification.
+- [ ] JIRA moves to `QA Testing` for agent-completed implementation; `Done` is used only after explicit human approval.
+- [ ] Model selection follows `docs/harness/model-routing.md`; mini-eligible work uses a mini-class model when the execution environment supports it.
 - [ ] Blocked tasks include a concrete blocker and next step.
 
 ## C3 - Architecture Boundaries Hold
