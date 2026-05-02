@@ -82,7 +82,7 @@ describe("AIPanel", () => {
         // Assert
         expect(screen.queryByText(/AI request failed/i)).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /Retry/i })).not.toBeInTheDocument();
-        expect(screen.queryByText(/Citations/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole("list", { name: /citations/i })).not.toBeInTheDocument();
       });
 
       it("handles missing datasetId prop", () => {
@@ -329,7 +329,7 @@ describe("AIPanel", () => {
 
         // Assert
         await waitFor(() => {
-          expect(screen.getByText("Citations")).toBeInTheDocument();
+          expect(screen.getByRole("list", { name: /citations/i })).toBeInTheDocument();
           expect(screen.getByText("Source 1")).toBeInTheDocument();
           expect(screen.getByText("Source 2")).toBeInTheDocument();
         });
@@ -352,7 +352,7 @@ describe("AIPanel", () => {
         await waitFor(() => {
           expect(screen.getByText("Simple answer")).toBeInTheDocument();
         });
-        expect(screen.queryByText("Citations")).not.toBeInTheDocument();
+        expect(screen.queryByRole("list", { name: /citations/i })).not.toBeInTheDocument();
       });
 
       it("allows submitting multiple queries in sequence", async () => {

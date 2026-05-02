@@ -3,21 +3,26 @@
 > This file is live session state. Keep it updated while working, not only at
 > the end. Reset it to this template when the session closes.
 
-- **Active task:** _none_
-- **Start:** _-_
-- **Agent/tool:** _-_
-- **Status:** _idle_
+- **Active task:** IHSQD-62 — Improve AI response rendering and trust signals
+- **Start:** 2026-05-02 23:43
+- **Agent/tool:** GitHub Copilot (Claude Sonnet 4.6)
+- **Status:** in-progress
 
 ## Plan
 
-_Describe the 3-5 steps you will take before changing product code._
+1. Review AIResponse.tsx and AIPanel.tsx current state.
+2. Improve `AIResponse`: render citations as clickable links (when URL present), render `suggestions` section.
+3. Update co-located tests to cover new rendering behaviour using accessible queries.
+4. Run `./init.sh` and confirm green.
+5. Commit, push, and transition JIRA to QA Testing.
 
 ## Log
 
-_Record significant actions: files changed, decisions made, blockers found._
-
-- ...
+- Read domain types: `AIAssistantResponse` has `answer`, `citations?`, `suggestions?`.
+- `suggestions` is in the domain but never rendered — will add rendering.
+- Citations have optional `url` field — will render as `<a>` when present.
+- Tests currently query by CSS class selectors; will migrate to accessible queries.
 
 ## Next Step
 
-_If the session is interrupted, write the first thing the next session should do._
+_If the session is interrupted, implement improvements to AIResponse.tsx and update tests._
