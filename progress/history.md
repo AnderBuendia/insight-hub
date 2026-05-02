@@ -96,3 +96,11 @@
 - **Changes:** Updated `useAI` to synchronize the context key ref during render with a targeted lint exception documenting the stale-response guard; added a regression test that defers the hook effect, rerenders filters, and resolves the stale request before the effect can reset state.
 - **Verification:** `npm test -- src/features/ai/state/useAI.test.ts` passed with 37 tests; final `./init.sh` passed with lint, typecheck, and coverage above 80%.
 - **Close state:** Local review fix complete; no JIRA transition performed because this was a user-directed local task.
+
+## 2026-05-02 - IHSQD-62: Improve AI response rendering and trust signals
+
+- **Agent/tool:** GitHub Copilot (Claude Sonnet 4.6)
+- **Task:** Improve `AIResponse` rendering: visual hierarchy, citations as accessible links, suggestions section.
+- **Changes:** `AIResponse.tsx` — citations with URL render as `<a target="_blank" rel="noopener noreferrer">` links; citations without URL remain plain text; added "Follow-up questions" section for `suggestions` (previously defined in domain but never rendered); improved typography (leading-relaxed, section dividers, uppercase tracking labels). `AIResponse.test.tsx` — migrated 6 CSS-class selectors to ARIA queries; added 4 new tests (link citation, plain citation, suggestions render, suggestions hide). `AIPanel.test.tsx` — updated 3 assertions to use ARIA list queries.
+- **Verification:** `npm run validations` passed: lint ✅ · typecheck ✅ · 255/255 tests ✅ · coverage all ≥80%. `AIResponse.tsx` at 100% coverage.
+- **JIRA:** Comment added to `IHSQD-62`; transitioned to `QA Testing`.
