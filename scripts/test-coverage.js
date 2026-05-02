@@ -5,10 +5,11 @@
 /**
  * This script runs vitest with coverage and enforces thresholds.
  * Vitest 4.x reports thresholds but doesn't fail by default.
- * This script parses the output and exits with code 1 if thresholds are not met.
+ * This script reads the JSON coverage report and exits with code 1 if thresholds are not met.
  */
 
 import { exec } from "child_process";
+import { readFileSync, rmSync } from "fs";
 
 const THRESHOLDS = {
   lines: 80,
@@ -17,35 +18,93 @@ const THRESHOLDS = {
   statements: 80,
 };
 
+const COVERAGE_FILE = "coverage/coverage-final.json";
+const OUTPUT_BUFFER_BYTES = 20 * 1024 * 1024;
+
+function percentage(covered, total) {
+  if (total === 0) {
+    return 100;
+  }
+
+  return Number(((covered / total) * 100).toFixed(2));
+}
+
+function calculateCoverage() {
+  const report = JSON.parse(readFileSync(COVERAGE_FILE, "utf8"));
+  const totals = {
+    statements: { covered: 0, total: 0 },
+    branches: { covered: 0, total: 0 },
+    functions: { covered: 0, total: 0 },
+    lines: { covered: 0, total: 0 },
+  };
+
+  for (const file of Object.values(report)) {
+    for (const count of Object.values(file.s)) {
+      totals.statements.total += 1;
+      if (count > 0) {
+        totals.statements.covered += 1;
+      }
+    }
+
+    for (const branchCounts of Object.values(file.b)) {
+      for (const count of branchCounts) {
+        totals.branches.total += 1;
+        if (count > 0) {
+          totals.branches.covered += 1;
+        }
+      }
+    }
+
+    for (const count of Object.values(file.f)) {
+      totals.functions.total += 1;
+      if (count > 0) {
+        totals.functions.covered += 1;
+      }
+    }
+
+    const lines = new Set(Object.values(file.statementMap).map(statement => statement.start.line));
+    const coveredLines = new Set();
+
+    for (const [id, count] of Object.entries(file.s)) {
+      if (count > 0) {
+        coveredLines.add(file.statementMap[id].start.line);
+      }
+    }
+
+    totals.lines.total += lines.size;
+    totals.lines.covered += coveredLines.size;
+  }
+
+  return {
+    statements: percentage(totals.statements.covered, totals.statements.total),
+    branches: percentage(totals.branches.covered, totals.branches.total),
+    functions: percentage(totals.functions.covered, totals.functions.total),
+    lines: percentage(totals.lines.covered, totals.lines.total),
+  };
+}
+
 console.log("Running tests with coverage...\n");
 
-exec("npx vitest run --coverage", (error, stdout, stderr) => {
+rmSync(COVERAGE_FILE, { force: true });
+
+exec("npx vitest run --coverage", { maxBuffer: OUTPUT_BUFFER_BYTES }, (error, stdout, stderr) => {
   // Always print the output
   console.log(stdout);
   if (stderr) {console.error(stderr);}
 
   // If tests themselves failed, exit with error
-  if (error && !stdout.includes("Coverage report")) {
+  if (error) {
     console.error("\n❌ Tests failed");
     process.exit(1);
   }
 
-  // Parse coverage percentages from output
-  const coverageMatch = stdout.match(/All files\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)/);
-
-  if (!coverageMatch) {
+  let coverage;
+  try {
+    coverage = calculateCoverage();
+  } catch (_error) {
     console.error("\n⚠️  Could not parse coverage output");
     process.exit(1);
   }
-
-  const [, statements, branches, functions, lines] = coverageMatch.map(Number);
-
-  const coverage = {
-    statements,
-    branches,
-    functions,
-    lines,
-  };
 
   console.log("\n📊 Coverage Summary:");
   console.log(`  Statements: ${coverage.statements}% (threshold: ${THRESHOLDS.statements}%)`);

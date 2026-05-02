@@ -7,7 +7,9 @@ import type { AnalysisState } from "@/features/analysis/state/types";
 import type { AnalysisSnapshot } from "@/domain";
 
 vi.mock("@/features/ai/page/AIPanel", () => ({
-  AIPanel: () => <div data-testid="ai-panel" />,
+  AIPanel: (props: unknown) => (
+    <div data-testid="ai-panel" data-props={JSON.stringify(props)} />
+  ),
 }));
 
 const defaultAnalysisActions = {
@@ -127,6 +129,22 @@ describe("AnalysisSuccess", () => {
     expect(screen.getByText("Total")).toBeInTheDocument();
     expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Snapshots" })).toBeInTheDocument();
+  });
+
+  it("passes active analysis context into the AI panel", () => {
+    renderAnalysisSuccess();
+
+    expect(screen.getByTestId("ai-panel")).toHaveAttribute(
+      "data-props",
+      JSON.stringify({
+        datasetId: "ds_1",
+        filters: { category: "even" },
+        metrics: [
+          { type: "total", value: 60 },
+          { type: "count", value: 3 },
+        ],
+      }),
+    );
   });
 
   it("shows the restore banner when a snapshot is selected", () => {

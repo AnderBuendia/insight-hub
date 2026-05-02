@@ -11,9 +11,17 @@ For any non-trivial change:
 - Work on one task at a time.
 - Keep `progress/current.md` updated.
 - Treat JIRA as the source of truth for backlog state when available.
-- Use `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, and `docs/TESTING.md` as
-  the source of truth for implementation.
+- Load context on demand: use `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`,
+  and `docs/TESTING.md` when the task touches architecture, conventions, or
+  tests.
 - Run `./init.sh` before considering the task complete.
+- Move verified implementation work to `QA Testing` in JIRA, not `Done`,
+  unless a human explicitly approves final closeout.
+- Follow `docs/harness/model-routing.md` for mini vs stronger model selection.
+  Use `.github/prompt/route-task.prompt.md` when a pre-flight routing decision
+  is needed.
+  Prefer mini-class models for deterministic evidence-driven work and escalate
+  when evidence is missing, validation is red, or judgment is needed.
 
 When acting as a reviewer, prioritize bugs, regressions, layer-boundary
 violations, missing tests, and verification gaps.

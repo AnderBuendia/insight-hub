@@ -33,6 +33,7 @@ product code.
 | `progress/current.md` | Live session state | Always at startup and while working |
 | `progress/history.md` | Append-only session history | Before closing or when context is needed |
 | `docs/harness/jira-mcp.md` | JIRA MCP research and integration plan | When selecting or updating work items |
+| `docs/harness/model-routing.md` | Mini vs stronger model routing policy | Before delegating or choosing model class |
 | `docs/ARCHITECTURE.md` | Product architecture and layer responsibilities | Before implementation |
 | `docs/CONVENTIONS.md` | Naming, styling, lint, branching conventions | Before editing code |
 | `docs/TESTING.md` | Test structure and coverage expectations | Before writing tests |
@@ -47,10 +48,59 @@ product code.
 
 ---
 
-## 3. Hard Rules
+## 3. Context Budget
+
+Keep startup small. Read the always-required files first, then load other
+documents only when the active task touches their area.
+
+Always read:
+
+- `progress/current.md`
+- The user-provided task or JIRA issue context
+- The specific files you will edit or review
+
+Read conditionally:
+
+- `docs/ARCHITECTURE.md` before product implementation or layer-boundary changes
+- `docs/CONVENTIONS.md` before code, UI, lint, or naming changes
+- `docs/TESTING.md` before adding or changing tests
+- `docs/DEFINITION_OF_DONE.md` and `CHECKPOINTS.md` during closeout
+- Domain docs only for domain model, business rule, or invariant changes
+- Role definitions only when actually orchestrating subagents
+
+Prefer targeted `rg` and small file ranges over whole-document reads. Summarize
+large findings in `progress/` instead of repeatedly re-reading the same context.
+
+## 4. Model Routing
+
+Before delegating or choosing a model class, classify the task with
+`docs/harness/model-routing.md`.
+
+Default to mini-class models for deterministic, evidence-driven work such as
+commit proposals, PR markdown, JIRA comments, session-history entries,
+mechanical docs updates, checklist synchronization, and narrow search/report
+tasks.
+
+Use `.github/prompt/route-task.prompt.md` when a runner needs an explicit
+pre-flight decision before launching a prompt, subagent, or model-specific
+session.
+
+Use a stronger model for ambiguous product behavior, architecture, domain or
+test strategy, failing validation, complex review/debugging, security or
+data-integrity risk, and irreversible external side effects.
+
+If model selection is unavailable inside the current session, apply the same
+classification and record which lane would have been used.
+
+---
+
+## 5. Hard Rules
 
 - One task at a time. Do not mix unrelated features, fixes, or refactors.
 - Do not mark a task `done` without green verification.
+- A completed implementation is ready for human review, not production-final.
+  When JIRA is available, move it to `QA Testing`, not `Done`, unless a
+  human explicitly asks for the final transition.
 - Keep `progress/current.md` updated while working, not only at the end.
 - JIRA is the intended source of truth for backlog and task state. Do not
   maintain a parallel local task list in this repository.
@@ -67,7 +117,7 @@ product code.
 
 ---
 
-## 4. How to Choose Work
+## 6. How to Choose Work
 
 JIRA-connected mode:
 
@@ -90,7 +140,7 @@ User-directed mode:
 
 ---
 
-## 5. Multi-Agent Pattern
+## 7. Multi-Agent Pattern
 
 Use the portable role definitions in `.agents/roles/`:
 
@@ -106,13 +156,14 @@ return only a short pointer, such as `done -> progress/impl_<task>.md`.
 
 ---
 
-## 6. Session Close
+## 8. Session Close
 
 Before ending a session:
 
 1. Run `./init.sh`.
-2. If the task is complete and JIRA MCP is available, propose or perform the
-   agreed JIRA transition/comment.
+2. If the implementation is complete and JIRA MCP is available, propose or
+   perform the agreed JIRA comment and transition to `QA Testing`.
+   Do not transition to `Done` unless a human explicitly approves it.
 3. If the task is blocked, document the blocker and next step in
    `progress/current.md`; mirror it to JIRA when possible.
 4. Append the session summary to `progress/history.md`.

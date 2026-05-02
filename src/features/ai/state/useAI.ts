@@ -1,11 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AIInfra } from "@/infra";
 import { FeatureFlags } from "@/shared";
+import type { AIAssistantContext } from "@/domain";
 import type { AIState } from "./types";
 
-export function useAI(datasetId: string) {
+function toAssistantContext(context: string | AIAssistantContext): AIAssistantContext {
+  if (typeof context === "string") {
+    return { datasetId: context };
+  }
+
+  return context;
+}
+
+function getAssistantContextKey(context: AIAssistantContext) {
+  return JSON.stringify({
+    datasetId: context.datasetId,
+    filters: context.filters ?? null,
+    metrics: context.metrics ?? null,
+  });
+}
+
+export function useAI(context: string | AIAssistantContext) {
   const enabled = FeatureFlags.aiEnabled;
+  const assistantContext = toAssistantContext(context);
+  const assistantContextKey = getAssistantContextKey(assistantContext);
+  const { datasetId } = assistantContext;
   const promptRef = useRef("");
+  const contextKeyRef = useRef(assistantContextKey);
+  // eslint-disable-next-line react-hooks/refs -- stale response guards must observe context changes before effects run.
+  contextKeyRef.current = assistantContextKey;
 
   const [state, setState] = useState<AIState>(() => {
     if (!FeatureFlags.aiEnabled) return { status: "disabled" };
@@ -25,11 +48,9 @@ export function useAI(datasetId: string) {
         return { status: "idle", datasetId, prompt: "", history: [] };
       }
 
-      if (prev.datasetId === datasetId) return prev;
-
       return { status: "idle", datasetId, prompt: prev.prompt, history: [] };
     });
-  }, [enabled, datasetId]);
+  }, [enabled, datasetId, assistantContextKey]);
 
   const setPrompt = useCallback(
     (prompt: string) => {
@@ -52,6 +73,8 @@ export function useAI(datasetId: string) {
     if (!prompt) return;
 
     const requestDatasetId = datasetId;
+    const requestContext = assistantContext;
+    const requestContextKey = assistantContextKey;
 
     setState((prev) => {
       if (prev.status === "disabled") return prev;
@@ -65,10 +88,12 @@ export function useAI(datasetId: string) {
 
     const result = await AIInfra.submitAIQuery({
       prompt,
-      context: {
-        datasetId: requestDatasetId,
-      },
+      context: requestContext,
     });
+
+    if (contextKeyRef.current !== requestContextKey) {
+      return;
+    }
 
     if (!result.ok) {
       setState((prev) => {
@@ -106,7 +131,7 @@ export function useAI(datasetId: string) {
         history: nextHistory,
       };
     });
-  }, [enabled, datasetId]);
+  }, [enabled, datasetId, assistantContext, assistantContextKey]);
 
   const clear = useCallback(() => {
     if (!enabled) return;

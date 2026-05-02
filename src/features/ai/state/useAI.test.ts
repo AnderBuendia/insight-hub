@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AIInfra } from "@/infra";
 import type { AIAssistantResult } from "@/domain";
+import type * as React from "react";
 
 // Mock the infra module
 vi.mock("@/infra", () => ({
@@ -96,6 +97,7 @@ describe("useAI", () => {
     });
 
     afterEach(() => {
+      vi.doUnmock("react");
       vi.resetModules();
     });
 
@@ -263,6 +265,37 @@ describe("useAI", () => {
           },
         });
         expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(1);
+      });
+
+      it("passes active analysis filters and metrics to AIInfra", async () => {
+        // Arrange
+        const { useAI } = await import("./useAI");
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "response" },
+        });
+
+        const context = {
+          datasetId: "ds_456",
+          filters: { category: "even" },
+          metrics: [{ type: "total" as const, value: 60 }],
+        };
+        const { result } = renderHook(() => useAI(context));
+
+        act(() => {
+          result.current.actions.setPrompt("Explain active state");
+        });
+
+        // Act
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        // Assert
+        expect(AIInfra.submitAIQuery).toHaveBeenCalledWith({
+          prompt: "Explain active state",
+          context,
+        });
       });
 
       it("handles rapid setPrompt followed by submit", async () => {
@@ -496,6 +529,161 @@ describe("useAI", () => {
             prompt: "Query",
             history: [],
           });
+        });
+      });
+
+      it("resets history when analysis filters change for the same dataset", async () => {
+        // Arrange
+        const { useAI } = await import("./useAI");
+        vi.mocked(AIInfra.submitAIQuery).mockResolvedValue({
+          ok: true,
+          data: { answer: "Filtered response" },
+        });
+
+        const { result, rerender } = renderHook(
+          ({ filters }) => useAI({
+            datasetId: "ds_123",
+            filters,
+            metrics: [{ type: "total" as const, value: 60 }],
+          }),
+          { initialProps: { filters: { category: "even" } } },
+        );
+
+        act(() => {
+          result.current.actions.setPrompt("Explain this view");
+        });
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        expect(result.current.state).toMatchObject({
+          status: "success",
+          history: [{ prompt: "Explain this view", response: { answer: "Filtered response" } }],
+        });
+
+        // Act - same dataset, different active analysis context
+        rerender({ filters: { category: "odd" } });
+
+        // Assert
+        await waitFor(() => {
+          expect(result.current.state).toEqual({
+            status: "idle",
+            datasetId: "ds_123",
+            prompt: "",
+            history: [],
+          });
+        });
+      });
+
+      it("discards stale responses when filters change mid-flight", async () => {
+        // Arrange
+        const { useAI } = await import("./useAI");
+        let resolveStale!: (value: AIAssistantResult) => void;
+        vi.mocked(AIInfra.submitAIQuery)
+          .mockImplementationOnce(
+            () => new Promise<AIAssistantResult>((resolve) => { resolveStale = resolve; }),
+          )
+          .mockResolvedValueOnce({ ok: true, data: { answer: "Fresh response" } });
+
+        const { result, rerender } = renderHook(
+          ({ filters }) => useAI({
+            datasetId: "ds_123",
+            filters,
+            metrics: [{ type: "total" as const, value: 60 }],
+          }),
+          { initialProps: { filters: { category: "even" } } },
+        );
+
+        act(() => {
+          result.current.actions.setPrompt("Explain this view");
+        });
+        act(() => {
+          void result.current.actions.submit();
+        });
+
+        rerender({ filters: { category: "odd" } });
+
+        await act(async () => {
+          resolveStale({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        await waitFor(() => {
+          expect(result.current.state).toEqual({
+            status: "idle",
+            datasetId: "ds_123",
+            prompt: "Explain this view",
+            history: [],
+          });
+        });
+
+        await act(async () => {
+          await result.current.actions.submit();
+        });
+
+        expect(AIInfra.submitAIQuery).toHaveBeenCalledTimes(2);
+        expect(AIInfra.submitAIQuery).toHaveBeenLastCalledWith({
+          prompt: "Explain this view",
+          context: {
+            datasetId: "ds_123",
+            filters: { category: "odd" },
+            metrics: [{ type: "total", value: 60 }],
+          },
+        });
+        expect(result.current.state).toMatchObject({
+          status: "success",
+          datasetId: "ds_123",
+          history: [{ prompt: "Explain this view", response: { answer: "Fresh response" } }],
+        });
+      });
+
+      it("discards stale same-dataset context responses before the context reset effect runs", async () => {
+        // Arrange
+        vi.resetModules();
+        vi.doMock("@/shared", () => ({
+          FeatureFlags: { aiEnabled: true },
+        }));
+        vi.doMock("react", async () => {
+          const actual = await vi.importActual<typeof React>("react");
+          return {
+            ...actual,
+            useEffect: vi.fn(),
+          };
+        });
+
+        const { useAI } = await import("./useAI");
+        let resolveStale!: (value: AIAssistantResult) => void;
+        vi.mocked(AIInfra.submitAIQuery).mockImplementationOnce(
+          () => new Promise<AIAssistantResult>((resolve) => { resolveStale = resolve; }),
+        );
+
+        const { result, rerender } = renderHook(
+          ({ filters }) => useAI({
+            datasetId: "ds_123",
+            filters,
+            metrics: [{ type: "total" as const, value: 60 }],
+          }),
+          { initialProps: { filters: { category: "even" } } },
+        );
+
+        act(() => {
+          result.current.actions.setPrompt("Explain this view");
+        });
+        act(() => {
+          void result.current.actions.submit();
+        });
+
+        // Act - rerender the new context and resolve the stale request before effects run.
+        rerender({ filters: { category: "odd" } });
+        await act(async () => {
+          resolveStale({ ok: true, data: { answer: "Stale response" } });
+        });
+
+        // Assert
+        expect(result.current.state).toEqual({
+          status: "loading",
+          datasetId: "ds_123",
+          prompt: "Explain this view",
+          history: [],
         });
       });
     });
