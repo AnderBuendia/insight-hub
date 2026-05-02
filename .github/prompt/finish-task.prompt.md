@@ -12,6 +12,17 @@ Use this prompt when one implementation task is ready to close.
 You are operating inside the InsightHub Harness Engineering workflow. Use English
 for all generated repository artifacts.
 
+## Model Routing
+
+Follow `docs/harness/model-routing.md`. Default to a mini-class model for this
+prompt when the task is already implemented and verification evidence exists.
+The closeout work is mostly deterministic: inspect the diff, summarize changes,
+propose commits, fill the PR template, and draft the JIRA update.
+
+Escalate to a stronger model only when evidence is missing or contradictory,
+validation is red, the diff is complex enough to require product judgment, or
+the JIRA status/transition policy is unclear.
+
 ## Inputs
 
 - Task identifier: `$ARGUMENTS`
@@ -47,7 +58,9 @@ for all generated repository artifacts.
     `.github/pull_request_template.md`; document the implemented changes under
     its `## Changes` section.
 11. Draft a JIRA update comment and transition recommendation when JIRA context
-    is available.
+    is available. The default transition recommendation is `QA Testing`.
+    Do not recommend `Done` unless the user explicitly approved final
+    closeout after review.
 12. Update `progress/history.md` with the closing summary.
 13. Reset `progress/current.md` only after validation is green and the user has
     accepted the closure path.
@@ -134,7 +147,9 @@ PR:
 ```
 
 Do not transition a JIRA issue unless the user has approved the transition policy
-or explicitly asked for it.
+or explicitly asked for it. When transition approval exists, move completed
+implementation work to `QA Testing`, not `Done`. `Done` is reserved
+for explicit human-approved post-review closeout.
 
 ## Final Response
 
