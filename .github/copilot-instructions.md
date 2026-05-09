@@ -7,6 +7,9 @@ Use the InsightHub harness in `AGENTS.md` as the repository-level workflow.
 - Read `AGENTS.md`.
 - Read the relevant docs under `docs/`.
 - Check `progress/current.md`.
+- Read `progress/context/<task>.json` when the active task has one.
+- Treat manifest pointers as the default local context.
+- Read `issue_snapshot` only when the manifest includes it.
 - Treat JIRA as the intended source of truth for backlog state when available.
 - Keep the work scoped to one task.
 

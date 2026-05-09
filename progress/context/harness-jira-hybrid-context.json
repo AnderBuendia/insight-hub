@@ -1,0 +1,53 @@
+{
+  "task_id": "harness-jira-hybrid-context",
+  "status": "ready_for_qa",
+  "active_pointers": {
+    "task_brief": "task_brief_v1",
+    "implementation": "impl_v1",
+    "review": "review_v1",
+    "validation": "validation_v1",
+    "closeout": "closeout_v1"
+  },
+  "pointers": [
+    {
+      "id": "task_brief_v1",
+      "type": "task_brief",
+      "path": "progress/current.md",
+      "state": "current",
+      "updated_at": "2026-05-06T09:05:00Z",
+      "depends_on": []
+    },
+    {
+      "id": "impl_v1",
+      "type": "implementation",
+      "path": "progress/impl_harness-jira-hybrid-context.md",
+      "state": "current",
+      "updated_at": "2026-05-09T00:00:00Z",
+      "depends_on": ["task_brief_v1"]
+    },
+    {
+      "id": "review_v1",
+      "type": "review",
+      "path": "progress/review_harness-jira-hybrid-context.md",
+      "state": "current",
+      "updated_at": "2026-05-09T00:00:00Z",
+      "depends_on": ["impl_v1"]
+    },
+    {
+      "id": "validation_v1",
+      "type": "validation",
+      "path": "progress/validation_harness-jira-hybrid-context.md",
+      "state": "current",
+      "updated_at": "2026-05-09T00:00:00Z",
+      "depends_on": ["impl_v1"]
+    },
+    {
+      "id": "closeout_v1",
+      "type": "closeout",
+      "path": "progress/closeout_harness-jira-hybrid-context.md",
+      "state": "current",
+      "updated_at": "2026-05-09T00:00:00Z",
+      "depends_on": ["impl_v1", "review_v1", "validation_v1"]
+    }
+  ]
+}

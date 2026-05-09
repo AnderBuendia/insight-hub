@@ -22,13 +22,16 @@ Note: Atlassian documents that the older `/sse` endpoint is deprecated after
 
 When JIRA MCP is available:
 
-1. The leader fetches the requested or assigned issue.
-2. The issue key, summary, acceptance criteria, links, and status are recorded
-   in `progress/current.md`.
-3. Explorers and implementers write durable reports under `progress/`.
-4. The validation reviewer runs verification and writes a report.
-5. The finish-task prompt prepares JIRA comments/status updates and the PR.
-6. Completed implementation work moves to `QA Testing`. `Done` is
+1. The leader identifies the requested or assigned issue key.
+2. The leader uses the manifest pointers as the default local context when a task manifest exists.
+3. If the task will benefit from a persisted JIRA brief, the leader may store a
+   minimal `issue_snapshot` in `progress/context/<task>.json`.
+4. If no suitable local JIRA brief exists or an optional snapshot is marked `stale`,
+   the leader fetches the issue once, normalizes a reduced snapshot, and stores it in the manifest.
+5. Explorers and implementers write durable reports under `progress/`.
+6. The validation reviewer runs verification and writes a report.
+7. The finish-task prompt prepares JIRA comments/status updates and the PR.
+8. Completed implementation work moves to `QA Testing`. `Done` is
    reserved for the human-approved post-review closeout.
 
 When JIRA MCP is not available:
@@ -55,6 +58,16 @@ cannot provide, such as:
 - Custom field normalization.
 - Automatic PR/JIRA linking conventions.
 - Guardrails around who may transition or comment on issues.
+
+Before building a custom MCP, prefer a thin local materialization layer that:
+
+- normalizes issue payloads into a cheap local brief
+- writes the brief into the task manifest
+- applies one simple snapshot state across agents
+- reduces repeated token-heavy JIRA reads without replacing JIRA as source of truth
+
+This local materialization layer should remain optional. The base harness flow
+should still work with pointers only.
 
 ## Possible Custom MCP Shape
 

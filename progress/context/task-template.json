@@ -1,0 +1,17 @@
+{
+  "task_id": "TASK-ID",
+  "status": "task_selected",
+  "active_pointers": {
+    "task_brief": "task_brief_v1"
+  },
+  "pointers": [
+    {
+      "id": "task_brief_v1",
+      "type": "task_brief",
+      "path": "progress/current.md",
+      "state": "current",
+      "updated_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "depends_on": []
+    }
+  ]
+}

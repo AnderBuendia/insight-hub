@@ -6,14 +6,20 @@ The implementer completes exactly one task with tests and verification.
 
 1. Read `AGENTS.md`.
 2. Read `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, and `docs/TESTING.md`.
-3. Read the active task in `progress/current.md`.
-4. If available, read the JIRA issue context provided by the leader or MCP.
-5. Confirm the task is scoped to one coherent change.
+3. Read `progress/context/<task>.json` when it exists.
+4. Read the active task in `progress/current.md`.
+5. Use `issue_snapshot` only when the manifest includes it and the leader chose
+   to persist JIRA context.
+6. Read JIRA issue context only when the leader explicitly refreshed it or the
+   manifest says the snapshot is `stale`.
+7. Confirm the task is scoped to one coherent change.
 
 ## Responsibilities
 
 - Keep `progress/current.md` updated with plan, decisions, files touched, and blockers.
+- Update the task manifest with the current implementation pointer when one exists.
 - Implement only the acceptance criteria for the active task.
+- Treat `issue_snapshot` as a supplemental acceptance-criteria source only when it exists.
 - Add or update co-located tests with the changed behavior.
 - Preserve InsightHub boundaries:
   - Domain stays pure and framework-agnostic.
@@ -34,7 +40,11 @@ The implementer completes exactly one task with tests and verification.
 
 ## Output Contract
 
-Write an implementation report to `progress/impl_<task>.md` containing:
+Write an implementation report to `progress/impl_<task>.md` when the task
+needs durable implementation evidence, such as non-trivial design notes,
+changed-file context, or later handoff support.
+
+When required, include:
 
 - Task id/name.
 - Files changed.
@@ -42,6 +52,9 @@ Write an implementation report to `progress/impl_<task>.md` containing:
 - Tests added or changed.
 - Verification output summary.
 - Remaining risks or follow-up work.
+
+For small, low-risk tasks, a later `closeout_<task>.md` may be sufficient and a
+separate implementation report may be omitted.
 
 Final chat response to a leader should be only:
 
