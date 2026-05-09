@@ -28,22 +28,28 @@ the JIRA status/transition policy is unclear.
 - Task identifier: `$ARGUMENTS`
 - Repository harness: `AGENTS.md`
 - Session state: `progress/current.md`
+- Task context manifest: `progress/context/<task>.json` when present
 - Implementation report: `progress/impl_<task>.md` when present
 - Code review report: `progress/review_<task>.md` when present
 - Validation report: `progress/validation_<task>.md` when present
+- Closeout report: `progress/closeout_<task>.md` when present
 - PR template: `.github/pull_request_template.md`
-- JIRA context: fetch through the JIRA MCP when available
+- JIRA context: use local pointers first; read the manifest snapshot only when
+  present; fetch through the JIRA MCP only when the snapshot is missing, marked
+  `stale`, or closeout needs live data
 
 ## Required Flow
 
-1. Read `AGENTS.md`, `CHECKPOINTS.md`, and `progress/current.md`.
+1. Read `AGENTS.md`, `CHECKPOINTS.md`, `progress/current.md`, and the task manifest when present.
 2. Identify the active task:
    - Prefer the JIRA issue key from `$ARGUMENTS` or `progress/current.md`.
-   - If JIRA MCP is available, fetch the issue and use its title, description,
-     acceptance criteria, status, and links.
+   - Use manifest pointers as the default local context.
+   - If the manifest has `issue_snapshot`, use it as an optional local JIRA brief.
+   - If JIRA MCP is available and the snapshot is missing, marked `stale`, or
+     the closeout step needs live status, fetch the issue and refresh the brief.
    - If JIRA MCP is not available, explicitly state that JIRA context is unavailable.
 3. Inspect `git diff --stat` and `git diff` to understand the actual changes.
-4. Read existing reports in `progress/` for the task.
+4. Read the reports referenced by the task manifest when present. Fall back to the matching files in `progress/`.
 5. Run `./init.sh`.
 6. Run `npm run build` if the change touches routing, rendering, Next.js config,
    environment behavior, or production-only behavior.
@@ -52,17 +58,39 @@ the JIRA status/transition policy is unclear.
      `progress/validation_<task>.md`.
    - Until browser automation exists, record browser/manual validation as
      `not available`, not as pass.
-8. Confirm no unrelated changes are mixed into the task.
-9. Propose atomic commits using Conventional Commits.
-10. Generate PR markdown using the exact section structure from
+8. Decide which detailed reports are required:
+   - Use only `progress/closeout_<task>.md` for small, low-risk, one-session tasks.
+   - Require `progress/impl_<task>.md` when changed-file context, design notes,
+     or durable implementation evidence matter.
+   - Require `progress/review_<task>.md` when review findings or an approval
+     record matter.
+   - Require `progress/validation_<task>.md` when validation evidence needs
+     more than a one-line summary.
+9. Confirm no unrelated changes are mixed into the task.
+10. Propose atomic commits using Conventional Commits.
+11. Generate PR markdown using the exact section structure from
     `.github/pull_request_template.md`; document the implemented changes under
     its `## Changes` section.
-11. Draft a JIRA update comment and transition recommendation when JIRA context
+12. Draft a JIRA update comment and transition recommendation when JIRA context
     is available. The default transition recommendation is `QA Testing`.
     Do not recommend `Done` unless the user explicitly approved final
     closeout after review.
-12. Update `progress/history.md` with the closing summary.
-13. Reset `progress/current.md` only after validation is green and the user has
+13. Create or update `progress/closeout_<task>.md` as the compact canonical
+    closeout report. Summarize:
+    - task and outcome
+    - implemented change summary
+    - review verdict
+    - validation status
+    - JIRA comment/transition recommendation
+    - remaining risks or follow-up
+    Reference existing implementation, review, and validation reports instead of
+    duplicating their full contents.
+14. Update `progress/history.md` with one compact append-only entry that links
+    to the closeout report and records only the essential outcome, verification,
+    and JIRA state.
+15. Mark the task manifest `ready_for_qa`, `blocked`, or `closed` as appropriate.
+16. Register the closeout pointer in the task manifest when one exists.
+17. Reset `progress/current.md` only after validation is green and the user has
     accepted the closure path.
 
 ## Commit Guidance
@@ -150,6 +178,43 @@ Do not transition a JIRA issue unless the user has approved the transition polic
 or explicitly asked for it. When transition approval exists, move completed
 implementation work to `QA Testing`, not `Done`. `Done` is reserved
 for explicit human-approved post-review closeout.
+
+## Closeout Report
+
+Create a compact report at `progress/closeout_<task>.md`:
+
+```markdown
+# Closeout - <task>
+
+- Outcome: <ready_for_qa | blocked | closed>
+- Summary: <2-4 concise bullets>
+- Review: <approved / changes requested / not run> -> <path or n/a>
+- Validation: <pass / fail / blocked> -> <path or n/a>
+- JIRA: <comment drafted / transitioned to QA Testing / unavailable / n/a>
+- Risks: <short line or none>
+```
+
+Treat this file as the preferred human-readable roll-up after the task is
+finished. Keep `impl_`, `review_`, and `validation_` reports for detailed
+evidence, but do not repeat their full sections here.
+
+Only require detailed reports when the task size, risk, or handoff needs
+justify them. For small and low-risk tasks, the closeout report may be the only
+new durable report.
+
+## History Entry
+
+Append one compact entry to `progress/history.md`:
+
+```markdown
+## YYYY-MM-DD - <task>
+
+- Tool: <agent/tool>
+- Outcome: <one-line result>
+- Verify: `./init.sh` pass; `npm run build` pass/not required
+- JIRA: <state or n/a>
+- Closeout: `progress/closeout_<task>.md`
+```
 
 ## Final Response
 

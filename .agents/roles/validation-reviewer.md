@@ -30,13 +30,19 @@ claiming it was performed.
 
 1. Read `AGENTS.md`.
 2. Read `CHECKPOINTS.md` and `docs/TESTING.md`.
-3. Read `progress/current.md` and the implementation report.
-4. Identify which validation commands are required for the change.
-5. Run the commands and capture outcomes.
+3. Read `progress/context/<task>.json` when it exists.
+4. Read `progress/current.md` and the implementation report.
+5. Identify which validation commands are required for the change.
+6. Run the commands and capture outcomes.
+
+Use the manifest pointers as the default task brief. Read `issue_snapshot` only
+when present. Return to JIRA only if the validation result conflicts with the
+recorded task context.
 
 ## Output Contract
 
-Write the validation report to `progress/validation_<task>.md`:
+Write the validation report to `progress/validation_<task>.md` when validation
+evidence needs more than a one-line closeout summary:
 
 ```markdown
 # Validation - <task>
@@ -75,3 +81,8 @@ or:
 ```text
 BLOCKED -> progress/validation_<task>.md
 ```
+
+Register the validation pointer in the task manifest when one exists.
+
+For small, low-risk tasks with simple verification, the closeout report may
+summarize validation without a separate validation file.

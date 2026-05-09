@@ -7,16 +7,23 @@ behavior.
 
 1. Run `./init.sh` before product-code changes.
 2. Read `progress/current.md`.
-3. Work on exactly one task.
-4. Keep `progress/current.md` updated.
-5. Use the portable roles in `.agents/roles/` when delegating or reviewing.
-6. Run `./init.sh` before marking implementation ready for review.
-7. When JIRA is available, transition completed implementation to `QA Testing`,
+3. Read `progress/context/<task>.json` when the active task has one.
+4. Prefer manifest pointers as the default task context.
+5. Work on exactly one task.
+6. Keep `progress/current.md` updated.
+7. Keep the task manifest aligned with the latest canonical reports when one exists.
+8. Use the portable roles in `.agents/roles/` when delegating or reviewing.
+9. Run `./init.sh` before marking implementation ready for review.
+10. When JIRA is available, transition completed implementation to `QA Testing`,
    not `Done`, unless a human explicitly approves final closeout.
 
 Load context on demand. Start with `progress/current.md`, the active task, and
-the files being edited. Read architecture, conventions, testing, domain docs,
-and role files only when the task touches those areas.
+the task manifest when present, then the files being edited. Read
+`issue_snapshot` only when the manifest includes it and the task benefits from
+a persisted JIRA brief. Refresh JIRA only when needed for snapshot refresh or
+closeout. Read architecture,
+conventions, testing, domain docs, and role files only when the task touches
+those areas.
 
 ## Model Routing
 
@@ -43,5 +50,5 @@ risk, and irreversible external side effects.
 - Code review: `.agents/roles/reviewer.md`
 - Executable validation review: `.agents/roles/validation-reviewer.md`
 
-When using Codex subagents, ask them to write reports under `progress/` and
-return only a pointer to the report.
+When using Codex subagents, ask them to write reports under `progress/`, update
+the task manifest when one exists, and return only a pointer to the report.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Finish Task"
+  short_description: "Close harness tasks with validation and PR text"
+  default_prompt: "Use $finish-task to validate and prepare closeout for IH-123."

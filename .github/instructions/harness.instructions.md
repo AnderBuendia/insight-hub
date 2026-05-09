@@ -10,7 +10,13 @@ For any non-trivial change:
 
 - Work on one task at a time.
 - Keep `progress/current.md` updated.
+- Prefer `progress/context/<task>.json` over scanning `progress/` when a task
+  manifest exists.
+- Treat manifest pointers as the default local context.
+- Read `issue_snapshot` only when the manifest includes it and the task benefits from a persisted JIRA brief.
 - Treat JIRA as the source of truth for backlog state when available.
+- Refresh JIRA only on initial materialization, explicit refresh, closeout, or
+  when an optional snapshot is marked `stale`.
 - Load context on demand: use `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`,
   and `docs/TESTING.md` when the task touches architecture, conventions, or
   tests.

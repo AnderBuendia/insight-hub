@@ -8,6 +8,8 @@ a healthy final state after an agent session.
 - [ ] `AGENTS.md` exists at the repository root.
 - [ ] `init.sh` exists and exits with code 0.
 - [ ] `progress/current.md` and `progress/history.md` exist.
+- [ ] `docs/harness/context-pointers.md` documents the Context Pointer layer.
+- [ ] `progress/context/` exists with the task manifest template.
 - [ ] `docs/harness/jira-mcp.md` documents the intended JIRA MCP integration.
 - [ ] `.agents/roles/leader.md`, `explorer.md`, `implementer.md`, `reviewer.md`, and `validation-reviewer.md` exist.
 - [ ] Claude, Codex, and GitHub Copilot entrypoints reference the same harness.
@@ -15,6 +17,7 @@ a healthy final state after an agent session.
 ## C2 - Task State Is Coherent
 
 - [ ] Exactly one active work item is recorded in `progress/current.md`, or the session is idle.
+- [ ] If a task manifest exists, it points to the current task artifacts and stale reports are marked clearly.
 - [ ] JIRA is treated as the source of truth for backlog state when available.
 - [ ] Completed implementation work is transitioned or commented in JIRA only after green verification.
 - [ ] JIRA moves to `QA Testing` for agent-completed implementation; `Done` is used only after explicit human approval.

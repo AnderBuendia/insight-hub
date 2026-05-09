@@ -44,6 +44,9 @@ for f in \
   AGENTS.md \
   progress/current.md \
   progress/history.md \
+  progress/context/README.md \
+  progress/context/task-template.json \
+  docs/harness/context-pointers.md \
   docs/harness/jira-mcp.md \
   docs/harness/model-routing.md \
   docs/ARCHITECTURE.md \

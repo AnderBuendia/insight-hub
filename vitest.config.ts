@@ -20,6 +20,7 @@ export default defineConfig({
         "**/__tests__/**",
         "**/dist/**",
         "**/.next/**",
+        "scripts/**",
         "src/infra/**",
       ],
       // Note: Thresholds are enforced by scripts/test-coverage.js

@@ -20,9 +20,14 @@ already clear.
 ## Startup Protocol
 
 1. Read `AGENTS.md`.
-2. Read only the docs needed for the question.
-3. Inspect the smallest relevant code surface.
-4. Keep notes in a durable report under `progress/`.
+2. Read `progress/context/<task>.json` when it exists.
+3. Read only the docs needed for the question.
+4. Inspect the smallest relevant code surface.
+5. Keep notes in a durable report under `progress/`.
+
+Use the manifest pointers as the default task brief. Read `issue_snapshot` only
+when it exists. Do not re-fetch JIRA unless the question is specifically about
+stale or missing issue metadata.
 
 ## Output Contract
 
@@ -60,5 +65,6 @@ blocked -> progress/explore_<topic>.md
 
 - Be concrete and cite files.
 - Prefer answering the specific question over broad inventory.
+- Register the exploration report in the task manifest when one exists.
 - Do not propose unrelated refactors.
 - If the question cannot be answered locally, say what external input is needed.

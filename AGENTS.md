@@ -15,10 +15,14 @@ Before changing code:
 3. Identify the active work item:
    - Prefer the JIRA issue provided by the user or fetched through the JIRA MCP.
    - If JIRA is not connected yet, use the user's explicit request as the work item.
-4. Work on exactly one task at a time:
+4. If `progress/context/<task>.json` exists, read it before re-fetching JIRA:
+   - Treat `active_pointers` and `pointers` as the default manifest contract.
+   - Use `issue_snapshot` only when the manifest includes it and the task benefits from a persisted JIRA brief.
+   - Re-fetch JIRA only on initial materialization, explicit refresh, closeout, or when an optional snapshot is marked `stale`.
+5. Work on exactly one task at a time:
    - If the user gave an explicit task, use that task.
    - If no task is clear and JIRA MCP is unavailable, stop and ask for a work item.
-5. Record the JIRA key or local task label, start time, agent/tool, and short
+6. Record the JIRA key or local task label, start time, agent/tool, and short
    plan in `progress/current.md`.
 
 If `./init.sh` fails, fix or document the environment problem before touching
@@ -31,7 +35,9 @@ product code.
 | Path | Purpose | Read When |
 | --- | --- | --- |
 | `progress/current.md` | Live session state | Always at startup and while working |
+| `progress/context/` | Task-scoped Context Pointer manifests | When a task is active or handoffs span multiple reports |
 | `progress/history.md` | Append-only session history | Before closing or when context is needed |
+| `docs/harness/context-pointers.md` | Lightweight machine-friendly context indexing | Before introducing or updating task manifests |
 | `docs/harness/jira-mcp.md` | JIRA MCP research and integration plan | When selecting or updating work items |
 | `docs/harness/model-routing.md` | Mini vs stronger model routing policy | Before delegating or choosing model class |
 | `docs/ARCHITECTURE.md` | Product architecture and layer responsibilities | Before implementation |
@@ -56,7 +62,8 @@ documents only when the active task touches their area.
 Always read:
 
 - `progress/current.md`
-- The user-provided task or JIRA issue context
+- `progress/context/<task>.json` when it exists
+- The user-provided task and the manifest pointers when present
 - The specific files you will edit or review
 
 Read conditionally:
@@ -68,8 +75,11 @@ Read conditionally:
 - Domain docs only for domain model, business rule, or invariant changes
 - Role definitions only when actually orchestrating subagents
 
-Prefer targeted `rg` and small file ranges over whole-document reads. Summarize
-large findings in `progress/` instead of repeatedly re-reading the same context.
+Prefer targeted `rg` and small file ranges over whole-document reads. Prefer
+task manifests over directory scans. Summarize large findings in `progress/`
+instead of repeatedly re-reading the same context.
+Treat `issue_snapshot` as an optional cache for long-running or multi-agent JIRA
+tasks, not as the default manifest shape.
 
 ## 4. Model Routing
 
@@ -102,6 +112,7 @@ classification and record which lane would have been used.
   When JIRA is available, move it to `QA Testing`, not `Done`, unless a
   human explicitly asks for the final transition.
 - Keep `progress/current.md` updated while working, not only at the end.
+- When a task manifest exists, keep it aligned with the latest canonical report pointers.
 - JIRA is the intended source of truth for backlog and task state. Do not
   maintain a parallel local task list in this repository.
 - Respect layer boundaries:
@@ -122,11 +133,16 @@ classification and record which lane would have been used.
 JIRA-connected mode:
 
 ```text
-1. Use the configured JIRA MCP to fetch the assigned or requested issue.
-2. Read the issue title, description, acceptance criteria, labels, and links.
-3. Confirm the issue is small enough for one session.
-4. Update progress/current.md with the JIRA key, summary, plan, and start time.
-5. Reflect progress back to JIRA when the MCP is available and the action is safe.
+1. Identify the assigned or requested JIRA issue key.
+2. If a task manifest already exists, use its pointers as the default local context.
+3. If the manifest also contains `issue_snapshot`, use it as an optional working brief.
+4. If no suitable local JIRA brief exists and the task will benefit from one,
+   use the configured JIRA MCP to fetch the issue, normalize a minimal snapshot,
+   and materialize it into `progress/context/<task>.json`.
+5. Confirm the task is small enough for one session.
+6. Update progress/current.md with the JIRA key, summary, plan, and start time.
+7. Keep the manifest aligned with current report pointers and optional snapshot state.
+8. Reflect progress back to JIRA when the MCP is available and the action is safe.
 ```
 
 User-directed mode:
@@ -134,8 +150,11 @@ User-directed mode:
 ```text
 1. Treat the user's request as the active task.
 2. If the user gives a JIRA key, fetch context through the JIRA MCP when available.
-3. If JIRA MCP is not available, record the request directly in progress/current.md.
-4. Keep the same one-task-at-a-time lifecycle.
+3. If a task manifest already exists for that work, prefer its pointers over a new JIRA read.
+4. Omit `issue_snapshot` by default for local, short, or one-session tasks.
+5. If JIRA MCP is not available, record the request directly in progress/current.md.
+6. Keep the same one-task-at-a-time lifecycle.
+7. Create a task manifest only if the work will span multiple durable artifacts.
 ```
 
 ---
@@ -151,7 +170,8 @@ Use the portable role definitions in `.agents/roles/`:
 - `validation-reviewer.md` — runs automated validation and, later, manual web
   checks such as Puppeteer/Playwright smoke flows.
 
-Anti-telephone rule: subagents write their findings to files in `progress/` and
+Anti-telephone rule: subagents write their findings to files in `progress/`,
+register or update the matching Context Pointer when a task manifest exists, and
 return only a short pointer, such as `done -> progress/impl_<task>.md`.
 
 ---
@@ -167,7 +187,54 @@ Before ending a session:
 3. If the task is blocked, document the blocker and next step in
    `progress/current.md`; mirror it to JIRA when possible.
 4. Append the session summary to `progress/history.md`.
-5. Reset `progress/current.md` to the empty template.
-6. Leave no debug logs, temporary files, or unexplained TODOs.
+5. When closeout work is performed, create or update one compact
+   `progress/closeout_<task>.md` that summarizes implementation, review,
+   validation, and JIRA closeout state.
+6. Mark the task manifest `closed` or `blocked` when one exists.
+7. Reset `progress/current.md` to the empty template.
+8. Leave no debug logs, temporary files, or unexplained TODOs.
 
 If final verification is red, do not close the task as done.
+
+## 9. Report Policy
+
+Use two report layers:
+
+- Detailed evidence reports: `impl_<task>.md`, `review_<task>.md`,
+  `validation_<task>.md`
+- Compact closeout report: `closeout_<task>.md`
+
+Default rule:
+
+- `closeout_<task>.md` is the preferred human-facing summary at task close.
+- `history.md` stores only a compact pointer-style entry at task close.
+
+Use `closeout_<task>.md` only when all of these are true:
+
+- The task is local, short, or one-session.
+- The diff is small and low-risk.
+- `./init.sh` is the only meaningful verification, or verification is simple.
+- The task does not need a separate reviewer or validation artifact for safety.
+
+Add detailed reports when any of these are true:
+
+- The task spans multiple files or subsystems.
+- The task has non-trivial design or trade-off decisions.
+- The task needs explicit reviewer findings.
+- The task needs explicit validation evidence beyond a one-line closeout summary.
+- The task touches risky behavior, architecture, domain rules, routing, data
+  flow, or external side effects.
+- The task is expected to be handed off between agents or revisited later.
+
+Practical defaults:
+
+- Small docs or harness wording change:
+  - `closeout_<task>.md` only
+- Small code change with straightforward verification:
+  - `impl_<task>.md` and `closeout_<task>.md`
+- Medium or risky change:
+  - `impl_<task>.md`, `review_<task>.md`, `validation_<task>.md`, and `closeout_<task>.md`
+
+Legacy reports already present under `progress/` should be kept as historical
+evidence. Do not delete or rewrite them unless the user explicitly asks for a
+historical cleanup.
